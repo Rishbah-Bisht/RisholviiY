@@ -12,11 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL 
-  ? process.env.NEXT_PUBLIC_SITE_URL 
-  : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://risholviiy.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://risholviiy.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -91,7 +87,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "RisholviiY",
-  "url": "https://risholviiy.com",
+  "url": "https://risholviiy.vercel.app",
   "description": "Free Previous Year Question Paper (PYQ) platform for colleges in Dehradun, Uttarakhand.",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
