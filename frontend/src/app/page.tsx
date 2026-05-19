@@ -109,6 +109,7 @@ export default function Home() {
   const [active, setActive] = useState("overview");
   const [toast, setToast] = useState<Toast>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [institutes, setInstitutes] = useState<Institute[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -173,59 +174,66 @@ export default function Home() {
 
   const loadAll = useCallback(async () => {
     if (!token) return;
-    const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString();
-    const [instituteData, courseData, semesterData, subjectData, pyqData] = await Promise.all([
-      authed<{ institutes: Institute[] }>("/institutes"),
-      authed<{ courses: Course[] }>("/courses"),
-      authed<{ semesters: Semester[] }>("/semesters"),
-      authed<{ subjects: Subject[] }>("/subjects"),
-      authed<{ pyqs: Pyq[] }>(`/pyqs${query ? `?${query}` : ""}`),
-    ]);
-    setInstitutes(instituteData.institutes);
-    setCourses(courseData.courses);
-    setSemesters(semesterData.semesters);
-    setSubjects(subjectData.subjects);
-    setPyqs(pyqData.pyqs);
-    if (isSuper) {
-      try {
-        const [userData, tokenData, statsData] = await Promise.all([
-          authed<{ users: User[] }>("/users"),
-          authed<{
-            combinedSummary: {
-              totalTokensUsed: number;
-              totalLimit: number;
-              percentage: number;
-            };
-          }>("/admin/token-usage"),
-          authed<any>("/admin/system-stats"),
-        ]);
-        setUsers(userData.users);
-        setTokenUsage({
-          totalToday: tokenData.combinedSummary.totalTokensUsed,
-          dailyLimit: tokenData.combinedSummary.totalLimit,
-          percentage: tokenData.combinedSummary.percentage,
-        });
-        setSystemStats(statsData);
-      } catch (err) {
-        console.error("Failed to load Super Admin dashboard details:", err);
+    setLoadingData(true);
+    try {
+      const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString();
+      const [instituteData, courseData, semesterData, subjectData, pyqData] = await Promise.all([
+        authed<{ institutes: Institute[] }>("/institutes"),
+        authed<{ courses: Course[] }>("/courses"),
+        authed<{ semesters: Semester[] }>("/semesters"),
+        authed<{ subjects: Subject[] }>("/subjects"),
+        authed<{ pyqs: Pyq[] }>(`/pyqs${query ? `?${query}` : ""}`),
+      ]);
+      setInstitutes(instituteData.institutes);
+      setCourses(courseData.courses);
+      setSemesters(semesterData.semesters);
+      setSubjects(subjectData.subjects);
+      setPyqs(pyqData.pyqs);
+      if (isSuper) {
+        try {
+          const [userData, tokenData, statsData] = await Promise.all([
+            authed<{ users: User[] }>("/users"),
+            authed<{
+              combinedSummary: {
+                totalTokensUsed: number;
+                totalLimit: number;
+                percentage: number;
+              };
+            }>("/admin/token-usage"),
+            authed<any>("/admin/system-stats"),
+          ]);
+          setUsers(userData.users);
+          setTokenUsage({
+            totalToday: tokenData.combinedSummary.totalTokensUsed,
+            dailyLimit: tokenData.combinedSummary.totalLimit,
+            percentage: tokenData.combinedSummary.percentage,
+          });
+          setSystemStats(statsData);
+        } catch (err) {
+          console.error("Failed to load Super Admin dashboard details:", err);
+        }
       }
-    }
-    if (user && user.role === "user") {
-      try {
-        const tokenStatus = await authed<{
-          used: number;
-          limit: number;
-          remaining: number;
-          percentage: number;
-          zone: string;
-          tokensBorrowedToday: number;
-          sharedPool: number;
-          isThrottled: boolean;
-        }>("/users/token-status");
-        setUserTokenStatus(tokenStatus);
-      } catch (err) {
-        console.error("Failed to load user token status:", err);
+      if (user && user.role === "user") {
+        try {
+          const tokenStatus = await authed<{
+            used: number;
+            limit: number;
+            remaining: number;
+            percentage: number;
+            zone: string;
+            tokensBorrowedToday: number;
+            sharedPool: number;
+            isThrottled: boolean;
+          }>("/users/token-status");
+          setUserTokenStatus(tokenStatus);
+        } catch (err) {
+          console.error("Failed to load user token status:", err);
+        }
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingData(false);
     }
   }, [authed, filters, isSuper, token, user]);
 
@@ -689,6 +697,7 @@ export default function Home() {
               userTokenStatus={userTokenStatus}
               borrowLoading={borrowLoading}
               handleBorrowCredits={handleBorrowCredits}
+              loading={loadingData}
             />
           )}
           {active === "institutes" && isSuper && (
@@ -827,6 +836,19 @@ export default function Home() {
 function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => void; notify: (toast: Toast) => void; toast: Toast }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  const handleQuickFill = (role: "admin" | "student") => {
+    if (role === "admin") {
+      setEmail("ri_shukie@admin.in");
+      setPassword("admin1234");
+    } else {
+      setEmail("student@demo.com");
+      setPassword("student123");
+    }
+  };
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1094,6 +1116,85 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
 
 
 
+          {/* Login / Register Form */}
+          <form onSubmit={submit} className="space-y-4">
+            {mode === "register" && (
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Rishabh Bisht"
+                  required
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Email Address</label>
+              <input
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full rounded-xl bg-[#9B3060] hover:bg-[#7B2450] text-white py-3 text-xs font-bold uppercase tracking-wider active:scale-[0.99] transition-all cursor-pointer select-none shadow-md shadow-[#9B3060]/10 flex items-center justify-center gap-2"
+            >
+              {busy ? (
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : mode === "login" ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+
+          {/* Quick Demo Credentials for Login Mode */}
+          {mode === "login" && (
+            <div className="mt-4 p-3 rounded-xl border border-[#9B3060]/10 bg-[#FAF0E8]/40 space-y-2">
+              <p className="text-[9px] font-extrabold uppercase tracking-wider text-[#A06080] text-center">Quick Demo Access</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("admin")}
+                  className="rounded-lg bg-white border border-[#9B3060]/20 px-2 py-1.5 text-[10px] font-bold text-[#9B3060] hover:bg-[#FAF0E8] transition active:scale-95 cursor-pointer"
+                >
+                  Fill Super Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("student")}
+                  className="rounded-lg bg-white border border-[#9B3060]/20 px-2 py-1.5 text-[10px] font-bold text-[#9B3060] hover:bg-[#FAF0E8] transition active:scale-95 cursor-pointer"
+                >
+                  Fill Demo Student
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Or Continue With Divider */}
           <div className="relative my-6 flex items-center justify-center">
             <div className="absolute inset-0 flex items-center">
@@ -1197,6 +1298,7 @@ function Overview({
   userTokenStatus,
   borrowLoading,
   handleBorrowCredits,
+  loading,
 }: {
   stats: (string | number)[][];
   isSuper: boolean;
@@ -1213,6 +1315,7 @@ function Overview({
   userTokenStatus: any;
   borrowLoading: boolean;
   handleBorrowCredits: () => Promise<void>;
+  loading: boolean;
 }) {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
@@ -1238,6 +1341,60 @@ function Overview({
   const currentInst = useMemo(() => institutes.find((i) => i._id === user.institute), [institutes, user.institute]);
   const currentCourse = useMemo(() => courses.find((c) => c._id === user.course), [courses, user.course]);
   const currentSem = useMemo(() => semesters.find((s) => s._id === user.semester), [semesters, user.semester]);
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        {/* Profile & AI Credit skeleton */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 h-[260px] rounded-2xl bg-gray-100/90 p-8 flex flex-col justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-gray-200" />
+              <div className="space-y-2.5 flex-1">
+                <div className="h-4 w-32 bg-gray-200 rounded" />
+                <div className="h-7 w-48 bg-gray-200 rounded" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="h-10 w-full bg-gray-200 rounded-xl" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-10 bg-gray-200 rounded-xl" />
+                <div className="h-10 bg-gray-200 rounded-xl" />
+              </div>
+            </div>
+          </div>
+          <div className="h-[260px] rounded-2xl bg-gray-100/90 p-6 flex flex-col justify-between">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="space-y-2">
+              <div className="h-8 bg-gray-200 rounded-lg" />
+              <div className="h-8 bg-gray-200 rounded-lg" />
+            </div>
+            <div className="h-9 w-full bg-gray-200 rounded-xl" />
+          </div>
+        </div>
+
+        {/* Stats Grid skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-gray-100/90 rounded-2xl p-5 flex flex-col justify-between">
+              <div className="h-4 w-24 bg-gray-200 rounded" />
+              <div className="h-8 w-16 bg-gray-200 rounded" />
+            </div>
+          ))}
+        </div>
+
+        {/* Table/Data skeleton */}
+        <div className="bg-white rounded-2xl border border-gray-150 p-6 space-y-4 shadow-sm">
+          <div className="h-6 w-40 bg-gray-100 rounded" />
+          <div className="space-y-2.5">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-10 bg-gray-100/60 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (user.role === "user" || user.role === "admin") {
     return (
