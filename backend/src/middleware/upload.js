@@ -2,7 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 
-const uploadRoot = path.join(__dirname, "..", "..", "uploads");
+const uploadRoot = process.env.VERCEL
+  ? path.join("/tmp", "uploads")
+  : path.join(__dirname, "..", "..", "uploads");
 const logoDir = path.join(uploadRoot, "logos");
 const pyqDir = path.join(uploadRoot, "pyqs");
 
