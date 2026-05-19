@@ -2,7 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 
-const uploadRoot = process.env.VERCEL
+const isVercel = process.env.VERCEL || process.env.NOW_REGION || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === "production";
+
+const uploadRoot = isVercel
   ? path.join("/tmp", "uploads")
   : path.join(__dirname, "..", "..", "uploads");
 const logoDir = path.join(uploadRoot, "logos");

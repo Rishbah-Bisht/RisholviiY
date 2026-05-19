@@ -14,6 +14,8 @@ const { configureGoogleAuth } = require("./controllers/authController");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 configureGoogleAuth();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -44,7 +46,9 @@ app.use((error, _req, res, _next) => {
 
 const port = process.env.PORT || 5000;
 
-if (process.env.VERCEL) {
+const isVercel = process.env.VERCEL || process.env.NOW_REGION || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === "production";
+
+if (isVercel) {
   // Serverless DB Connection Middleware
   let cachedConnection = null;
   app.use(async (req, res, next) => {
