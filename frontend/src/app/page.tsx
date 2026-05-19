@@ -27,6 +27,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { API_URL, api, asset } from "@/lib/api";
 import ApiUsagePanel from "./components/ApiUsagePanel";
+import { DeveloperBadge } from "./components/DeveloperBadge";
 
 const formatBytes = (bytes: number, decimals = 2) => {
   if (!bytes) return "0 Bytes";
@@ -910,81 +911,205 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
         <div className="w-full max-w-sm">
 
           {/* Brand Logo */}
-          <div className="mb-8 flex items-center gap-2">
-            <div className="grid grid-cols-2 gap-0.5">
-              <div className="h-2.5 w-2.5 rounded-sm bg-[#9B3060]" />
-              <div className="h-2.5 w-2.5 rounded-sm bg-[#D4A0B8]" />
-              <div className="h-2.5 w-2.5 rounded-sm bg-[#D4A0B8]" />
-              <div className="h-2.5 w-2.5 rounded-sm bg-[#9B3060]" />
+          <div className="mb-8 flex items-center gap-4">
+
+            {/* Logo Icon */}
+            <div className="grid grid-cols-2 gap-1">
+              <div className="h-3 w-3 rounded-sm bg-[#9B3060]" />
+              <div className="h-3 w-3 rounded-sm bg-[#D4A0B8]" />
+              <div className="h-3 w-3 rounded-sm bg-[#D4A0B8]" />
+              <div className="h-3 w-3 rounded-sm bg-[#9B3060]" />
             </div>
-            <span className="text-sm font-medium text-gray-800">RisholviiY</span>
+
+            {/* Brand Text */}
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg font-bold tracking-wide text-[#7B3060]">
+                RisholviiY
+              </span>
+
+
+
+              <span className="text-xs font-medium text-gray-500">
+                Design and Deploved by <span className="font-semibold text-[#9B3060]">Rishabh Bisht</span>
+              </span>
+            </div>
+
           </div>
 
-          {/* Mobile — mini illustration strip (only on small screens) */}
-          <div className="lg:hidden mb-6 rounded-2xl bg-[#FAF0E8] px-6 py-8 flex flex-col items-center relative overflow-hidden">
-            {/* mini blobs */}
-            <div className="absolute -top-4 -left-4 h-16 w-16 rounded-full bg-[#C95E72] opacity-80" />
-            <div className="absolute top-3 right-8 h-2.5 w-2.5 rounded-full bg-[#9B3060]" />
-            <div className="absolute bottom-4 right-4 h-2 w-2 rounded-full bg-[#D4A0B8]" />
+          {/* Mobile — Arc Reactor AI Animation */}
+          <div className="lg:hidden mb-6 rounded-lg bg-[#FAF0E8] px-6 py-8 flex flex-col items-center relative overflow-hidden">
 
-            {/* mini circle bg */}
-            <div className="absolute h-32 w-32 rounded-full bg-[#F2D8C8] opacity-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            {/* Animated radial glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_50%,rgba(155,48,96,0.08)_0%,transparent_65%)] animate-pulse" style={{ animationDuration: "3s" }} />
 
-            {/* mini skeleton */}
-            <svg width="90" height="110" viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
-              <ellipse cx="80" cy="38" rx="28" ry="32" fill="#F5EDE4" stroke="#D4B8A8" strokeWidth="1.5" />
-              <ellipse cx="68" cy="34" rx="8" ry="9" fill="#2C1810" opacity="0.85" />
-              <ellipse cx="92" cy="34" rx="8" ry="9" fill="#2C1810" opacity="0.85" />
-              <path d="M77 48 L80 43 L83 48" stroke="#C4A090" strokeWidth="1.2" fill="none" />
-              <rect x="67" y="54" width="26" height="7" rx="2" fill="#E8DDD5" stroke="#C4A090" strokeWidth="0.8" />
-              <line x1="72" y1="54" x2="72" y2="61" stroke="#C4A090" strokeWidth="0.6" />
-              <line x1="77" y1="54" x2="77" y2="61" stroke="#C4A090" strokeWidth="0.6" />
-              <line x1="82" y1="54" x2="82" y2="61" stroke="#C4A090" strokeWidth="0.6" />
-              <line x1="87" y1="54" x2="87" y2="61" stroke="#C4A090" strokeWidth="0.6" />
-              <rect x="75" y="68" width="10" height="12" rx="2" fill="#EDE0D4" stroke="#C4A090" strokeWidth="1" />
-              <path d="M52 85 Q80 78 108 85" stroke="#C4A090" strokeWidth="1.5" fill="none" />
-              <rect x="62" y="85" width="36" height="52" rx="4" fill="#EDE0D4" stroke="#C4A090" strokeWidth="1.2" />
-              <path d="M62 97 Q80 91 98 97" stroke="#C4A090" strokeWidth="1" fill="none" />
-              <path d="M62 107 Q80 101 98 107" stroke="#C4A090" strokeWidth="1" fill="none" />
-              <path d="M62 117 Q80 111 98 117" stroke="#C4A090" strokeWidth="1" fill="none" />
-              <line x1="80" y1="85" x2="80" y2="137" stroke="#C4A090" strokeWidth="1" />
-              <path d="M62 90 L38 105 L32 130" stroke="#C4A090" strokeWidth="6" strokeLinecap="round" fill="none" />
-              <path d="M98 90 L122 105 L128 130" stroke="#C4A090" strokeWidth="6" strokeLinecap="round" fill="none" />
-              <rect x="44" y="155" width="72" height="42" rx="4" fill="#D0C0B5" stroke="#B0A098" strokeWidth="1.2" />
-              <rect x="48" y="158" width="64" height="35" rx="2" fill="#8B7B6E" />
-              <ellipse cx="50" cy="196" rx="8" ry="5" fill="#C8621C" transform="rotate(-30 50 196)" />
-              <ellipse cx="38" cy="192" rx="7" ry="4" fill="#E88830" transform="rotate(-50 38 192)" />
-              <ellipse cx="110" cy="196" rx="8" ry="5" fill="#C8621C" transform="rotate(30 110 196)" />
-              <ellipse cx="122" cy="192" rx="7" ry="4" fill="#E88830" transform="rotate(50 122 192)" />
-            </svg>
+            {/* Scanline */}
+            <div
+              className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9B3060]/20 to-transparent"
+              style={{ animation: "scanLine 3s linear infinite" }}
+            />
 
-            <p className="relative z-10 mt-3 text-sm font-semibold text-[#7B3060]">
-              Ace your exams with previous year questions.
-            </p>
+            {/* Floating binary bits */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {["01", "10", "11", "00", "1", "0"].map((bit, i) => (
+                <span
+                  key={i}
+                  className="absolute text-[8px] font-mono text-[#9B3060]/20 select-none"
+                  style={{
+                    left: `${10 + i * 15}%`,
+                    top: `${20 + (i % 3) * 25}%`,
+                    animation: `floatBit ${3 + i * 0.5}s ease-in-out infinite`,
+                    animationDelay: `${i * 0.4}s`,
+                  }}
+                >
+                  {bit}
+                </span>
+              ))}
+            </div>
+
+            {/* Main row */}
+            <div className="relative z-10 flex items-center w-full justify-center gap-2">
+
+              {/* Arc Reactor */}
+              <div className="relative flex items-center justify-center shrink-0 w-28 h-28">
+
+                {/* Pulse rings */}
+                <div className="absolute h-28 w-28 rounded-full border border-[#9B3060]/10 animate-ping" style={{ animationDuration: "3s" }} />
+                <div className="absolute h-24 w-24 rounded-full border border-[#9B3060]/15 animate-ping" style={{ animationDuration: "2.2s", animationDelay: "0.5s" }} />
+
+                {/* Static outer */}
+                <div className="absolute h-24 w-24 rounded-full border border-[#9B3060]/20" />
+
+                {/* Slow spin */}
+                <div className="absolute h-20 w-20 rounded-full border border-dashed border-[#9B3060]/25"
+                  style={{ animation: "spin 12s linear infinite" }} />
+
+                {/* Fast reverse spin */}
+                <div className="absolute h-16 w-16 rounded-full border border-dashed border-[#C95E72]/30"
+                  style={{ animation: "spin 6s linear infinite reverse" }} />
+
+                {/* Glowing middle ring */}
+                <div className="absolute h-14 w-14 rounded-full border-2 border-[#9B3060]/50
+        shadow-[0_0_14px_rgba(155,48,96,0.25),inset_0_0_14px_rgba(155,48,96,0.08)]" />
+
+                {/* Spokes */}
+                {[0, 60, 120, 180, 240, 300].map((deg) => (
+                  <div
+                    key={deg}
+                    className="absolute w-px bg-gradient-to-t from-[#9B3060]/60 to-transparent"
+                    style={{
+                      height: "20px",
+                      bottom: "50%",
+                      left: "calc(50% - 0.5px)",
+                      transformOrigin: "bottom center",
+                      transform: `rotate(${deg}deg)`,
+                    }}
+                  />
+                ))}
+
+                {/* Inner core */}
+                <div className="absolute h-10 w-10 rounded-full bg-[#9B3060]/08 border border-[#9B3060]/50
+        shadow-[0_0_20px_rgba(155,48,96,0.5),0_0_40px_rgba(155,48,96,0.2),inset_0_0_12px_rgba(155,48,96,0.3)]
+        flex items-center justify-center">
+                  <div className="absolute inset-1 rounded-full border border-[#9B3060]/30" />
+                  <div
+                    className="h-3.5 w-3.5 rounded-full bg-[#9B3060] shadow-[0_0_10px_rgba(155,48,96,1),0_0_20px_rgba(155,48,96,0.7)]"
+                    style={{ animation: "corePulse 1.5s ease-in-out infinite" }}
+                  />
+                </div>
+              </div>
+
+              {/* Light Beam */}
+              <div className="relative flex-1 h-16 flex items-center">
+
+                <div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-px w-full bg-gradient-to-r from-[#9B3060] via-[#9B3060]/50 to-transparent"
+                  style={{ animation: "beamPulse 2s ease-in-out infinite" }}
+                />
+                <div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-2 w-4/5 bg-gradient-to-r from-[#9B3060]/50 via-[#9B3060]/15 to-transparent blur-sm"
+                  style={{ animation: "beamPulse 2s ease-in-out infinite" }}
+                />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-3/5 bg-gradient-to-r from-[#C95E72]/10 to-transparent blur-lg" />
+
+                {/* Travelling particles */}
+                {[0, 0.4, 0.8, 1.2].map((delay, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 -translate-y-1/2 rounded-full bg-[#9B3060]"
+                    style={{
+                      width: `${3.5 - i * 0.5}px`,
+                      height: `${3.5 - i * 0.5}px`,
+                      opacity: 0.9 - i * 0.15,
+                      animation: `travelParticle 2s linear infinite`,
+                      animationDelay: `${delay}s`,
+                    }}
+                  />
+                ))}
+
+                {/* AI label */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <div className="h-px w-3 bg-[#9B3060]/30" />
+                  <span
+                    className="text-[9px] font-bold tracking-[0.2em] text-[#9B3060]/50 uppercase"
+                    style={{ animation: "fadeFlicker 2s ease-in-out infinite" }}
+                  >
+                    AI
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom text */}
+            <div className="relative z-10 mt-5 text-center">
+
+              <div className="mt-2 flex items-center justify-center gap-1.5">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#9B3060] opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#9B3060]" />
+                </span>
+                <span className="text-[10px] font-medium tracking-[0.25em] text-[#A06080] uppercase">
+                  Powered by AI
+                </span>
+              </div>
+            </div>
 
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-semibold text-gray-900">
-            {mode === "login" ? "Login to your Account" : "Create account"}
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+            {mode === "login" ? "Sign in to RisholviiY" : "Create your Account"}
           </h2>
-          <p className="mt-1 mb-6 text-sm text-gray-400">
-            Track your exam preparation and performance in one place
+          <p className="mt-1.5 mb-6 text-xs text-gray-400">
+            {mode === "login"
+              ? "Access your previous year questions & AI assistant instantly."
+              : "Register to get daily credits, download papers & chat with AI."}
           </p>
 
           {/* Toast */}
           {toast && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-5 rounded-xl border border-red-100 bg-red-50/50 backdrop-blur-sm px-4 py-3.5 text-xs font-bold text-red-600 animate-in fade-in slide-in-from-top-2 duration-300">
               {toast.text}
             </div>
           )}
 
+
+
+          {/* Or Continue With Divider */}
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <span className="relative bg-white px-3 text-[10px] font-extrabold uppercase tracking-wider text-gray-300">
+              Continue With
+            </span>
+          </div>
+
           {/* Google Sign In */}
           < a
             href={`${API_URL}/auth/google`}
-            className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.99] transition-all cursor-pointer select-none shadow-sm"
+            className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-gray-200 px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.99] transition-all cursor-pointer select-none shadow-sm"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
@@ -995,22 +1120,17 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
 
           {/* Switch mode */}
           <p className="mt-6 text-center text-xs text-gray-400">
-            {mode === "login" ? "Not Registered Yet? " : "Already registered? "}
+            {mode === "login" ? "New to PYQ Hub? " : "Already have an account? "}
             <button
               type="button"
               onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="font-semibold text-[#9B3060] hover:underline"
+              className="font-bold text-[#9B3060] hover:text-[#7B2450] hover:underline transition"
             >
-              {mode === "login" ? "Create an account" : "Sign in"}
+              {mode === "login" ? "Create an account" : "Sign in here"}
             </button>
           </p>
 
-          {/* Premium Aesthetic Floating Developed Badge */}
-          <div className="group fixed bottom-5 right-5 z-50 flex flex-col items-end gap-1.5">
 
-
-
-          </div>
 
         </div>
       </section>
