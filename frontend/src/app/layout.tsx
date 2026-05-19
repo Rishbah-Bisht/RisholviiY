@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     creator: "@rishabh_bisht",
   },
   verification: {
-    google: "YOUR_GOOGLE_SEARCH_CONSOLE_VERIFICATION_CODE",
+    google: "google540be341a2977cdb",
   },
 };
 
