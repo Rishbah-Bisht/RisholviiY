@@ -32,6 +32,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 10000 }));
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/api", apiRoutes);
 
 app.use((error, _req, res, _next) => {
