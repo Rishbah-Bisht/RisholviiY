@@ -43,11 +43,31 @@ app.use((error, _req, res, _next) => {
 
 const port = process.env.PORT || 5000;
 
-connectDb()
-  .then(() => {
-    app.listen(port, () => console.log(`API running on http://localhost:${port}`));
-  })
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
+if (process.env.VERCEL) {
+  // Serverless DB Connection Middleware
+  let cachedConnection = null;
+  app.use(async (req, res, next) => {
+    try {
+      if (!cachedConnection) {
+        cachedConnection = connectDb();
+      }
+      await cachedConnection;
+      next();
+    } catch (err) {
+      cachedConnection = null; // Reset on failure
+      next(err);
+    }
   });
+} else {
+  // Local environment DB connection & Server setup
+  connectDb()
+    .then(() => {
+      app.listen(port, () => console.log(`API running on http://localhost:${port}`));
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+module.exports = app;
