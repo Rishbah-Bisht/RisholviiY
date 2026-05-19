@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   THEME SYSTEM — Edit colors here to update the
+   entire UI in one place.
+   ═══════════════════════════════════════════════ */
+:root {
+  /* ── Page surfaces ── */
+  --background: #e2f0ff;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-subtle: #F1F5F9;
+
+  /* ── Primary brand — Deep Blue ── */
+  --brand: #2563EB;
+  /* strong modern blue */
+  --brand-dark: #1E40AF;
+  /* deep professional blue */
+  --brand-accent: #38BDF8;
+  /* bright sky cyan */
+  /* Raw RGB triplets for rgba() usage */
+  --brand-rgb: 37, 99, 235;
+  --brand-dark-rgb: 29, 78, 216;
+
+  /* ── Soft surface tint (used for logo boxes, CTA bg, etc.) ── */
+  --soft-accent: #EFF6FF;
+  --soft-accent-rgb: 239, 246, 255;
+
+  /* ── Typography ── */
+  --muted: #64748B;
+
+  /* ── Borders / dividers ── */
+  --line: #E2E8F0;
+
+  /* ── Status colours ── */
+  --success: #22C55E;
+  --warning: #FACC15;
+  --danger: #EF4444;
+
+  /* ── Highlight ── */
+  --highlight: #FACC15;
+}
+
+/* ── Yellow/Amber Tone Override for Limited Admin (role: admin) ── */
+[data-role="admin"] {
+  /* Surface */
+  --background: #FFFBEB;
+  /* soft warm cream (cleaner than #FFFDF5) */
+  --foreground: #1F2937;
+  /* better readability (dark gray instead of brown) */
+
+  --card: #FFFFFF;
+  --card-subtle: #FEF3C7;
+  /* soft amber tint */
+
+  /* Brand - refined amber */
+  --brand: #7C3AED;
+  /* vibrant modern purple */
+  --brand-dark: #5B21B6;
+  /* deep hover/active purple */
+  --brand-accent: #C4B5FD;
+  /* soft lavender highlight */
+  /* highlight glow */
+
+  --brand-rgb: 245, 158, 11;
+  --brand-dark-rgb: 217, 119, 6;
+
+  /* Soft UI */
+  --soft-accent: #FEF3C7;
+  --soft-accent-rgb: 254, 243, 199;
+
+  --line: #FDE68A;
+  /* borders */
+  --muted: #6B7280;
+  /* improved neutral gray */
+
+  /* Extra (recommended for better UI) */
+  --success: #22C55E;
+  --warning: #FACC15;
+  --danger: #EF4444;
+
+  --shadow: rgba(245, 158, 11, 0.12);
+}
+
+
+/* Tailwind v4 theme mapping */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}

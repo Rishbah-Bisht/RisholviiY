@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RisholviiY — Premium Hierarchy-Aligned Academic Resource Hub</title>
+  
+  <!-- Preconnect & Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Styling Color Palette System */
+    :root {
+      --background: #f3f4f6;
+      --foreground: #241621;
+      --brand: #7a2854;
+      --brand-dark: #762348;
+      --brand-accent: #643da8;
+      --highlight: #d47754;
+      --soft-accent: #eca27c;
+      --card: #ffffff;
+      --muted: #6b6470;
+      --line: #e5e1e6;
+    }
+
+    /* Reset and Typography Standards */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--background);
+      color: var(--foreground);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'DM Serif Display', serif;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    /* Subtle Entrance Animations with Staggered Delays */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-item {
+      opacity: 0;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .delay-1 { animation-delay: 0.15s; }
+    .delay-2 { animation-delay: 0.3s; }
+    .delay-3 { animation-delay: 0.45s; }
+    .delay-4 { animation-delay: 0.6s; }
+    .delay-5 { animation-delay: 0.75s; }
+
+    /* Sticky Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: rgba(243, 244, 246, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line);
+      padding: 1.1rem 2rem;
+      transition: all 0.3s ease;
+    }
+
+    header.scrolled {
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 20px rgba(36, 22, 33, 0.05);
+      padding: 0.9rem 2rem;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.75rem;
+      color: var(--brand);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: transform 0.2s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.02);
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--highlight);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.2rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--foreground);
+      font-weight: 500;
+      font-size: 0.95rem;
+      position: relative;
+      padding: 0.25rem 0;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--brand);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--brand);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    /* Universal Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.6rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-primary {
+      background-color: var(--brand);
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--brand-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(122, 40, 84, 0.25);
+    }
+
+    .btn-accent {
+      background-color: var(--brand-accent);
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-accent:hover {
+      filter: brightness(1.15);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(100, 61, 168, 0.25);
+    }
+
+    .btn-highlight {
+      background-color: var(--highlight);
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-highlight:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(212, 119, 84, 0.25);
+    }
+
+    .btn-outline {
+      border: 1.5px solid var(--brand);
+      color: var(--brand);
+      background-color: transparent;
+    }
+
+    .btn-outline:hover {
+      background-color: var(--brand);
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(122, 40, 84, 0.15);
+    }
+
+    /* Hero Section */
+    .hero {
+      background-color: var(--foreground);
+      color: #ffffff;
+      padding: 8rem 2rem 7rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.08;
+      background-image: radial-gradient(var(--soft-accent) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .hero-glow-1 {
+      position: absolute;
+      top: -10%;
+      left: 10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(122, 40, 84, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-glow-2 {
+      position: absolute;
+      bottom: -10%;
+      right: 10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(100, 61, 168, 0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-container {
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero h1 span {
+      color: var(--soft-accent);
+      background: linear-gradient(135deg, var(--soft-accent) 0%, var(--highlight) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: rgba(243, 244, 246, 0.8);
+      max-width: 720px;
+      margin: 0 auto 2.8rem;
+      font-weight: 400;
+    }
+
+    .hero-ctas {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 5rem;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-cols: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 750px;
+      margin: 0 auto;
+      border-top: 1px solid rgba(229, 225, 230, 0.15);
+      padding-top: 2.5rem;
+    }
+
+    .stat-item h3 {
+      font-size: 3rem;
+      color: var(--soft-accent);
+      margin-bottom: 0.15rem;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-item p {
+      font-size: 0.9rem;
+      color: rgba(243, 244, 246, 0.6);
+      margin-bottom: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Core Section Standard Styles */
+    section {
+      padding: 6.5rem 2rem;
+    }
+
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.8rem;
+      color: var(--foreground);
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .section-header p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Features Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-cols: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2.2rem;
+    }
+
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 2.2rem 2rem;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background-color: transparent;
+      border-radius: 14px 14px 0 0;
+      transition: background-color 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(36, 22, 33, 0.06);
+      border-color: var(--line);
+    }
+
+    .card:hover::before {
+      background-color: var(--brand);
+    }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      background-color: rgba(122, 40, 84, 0.08);
+      display: grid;
+      place-items: center;
+      margin-bottom: 1.8rem;
+      color: var(--brand);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      background-color: var(--brand);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+
+    .card h3 {
+      font-size: 1.45rem;
+      color: var(--foreground);
+      margin-bottom: 0.85rem;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    /* Testimonial / Quote Block */
+    .testimonial-section {
+      background-color: rgba(100, 61, 168, 0.03);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+
+    .testimonial-block {
+      max-width: 850px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 5;
+    }
+
+    .quote-icon {
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--soft-accent);
+      font-family: 'DM Serif Display', serif;
+      margin-bottom: 0.5rem;
+      display: block;
+      opacity: 0.6;
+    }
+
+    .testimonial-quote {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--foreground);
+      line-height: 1.45;
+      margin-bottom: 2rem;
+      position: relative;
+      letter-spacing: -0.01em;
+    }
+
+    .testimonial-author {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--brand-accent);
+      margin-bottom: 0.2rem;
+    }
+
+    .testimonial-role {
+      font-size: 0.88rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+
+    /* Interactive CTA Banner */
+    .cta-banner {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+      color: #ffffff;
+      border-radius: 24px;
+      padding: 5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(100, 61, 168, 0.18);
+    }
+
+    .cta-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(236, 162, 124, 0.18) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .cta-banner h2 {
+      font-size: 3rem;
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-banner p {
+      font-size: 1.15rem;
+      color: rgba(255, 255, 255, 0.88);
+      max-width: 650px;
+      margin: 0 auto 2.8rem;
+      line-height: 1.6;
+    }
+
+    /* Footer Layout */
+    footer {
+      background-color: var(--foreground);
+      color: rgba(243, 244, 246, 0.7);
+      padding: 5rem 2rem 2.5rem;
+      border-top: 1px solid rgba(229, 225, 230, 0.1);
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-cols: 2fr repeat(3, 1fr);
+      gap: 4rem;
+      margin-bottom: 4rem;
+    }
+
+    .footer-brand h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: #ffffff;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .footer-brand p {
+      font-size: 0.95rem;
+      max-width: 320px;
+      line-height: 1.65;
+    }
+
+    .footer-col h4 {
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.4rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col ul li {
+      margin-bottom: 0.85rem;
+    }
+
+    .footer-col ul li a {
+      color: rgba(243, 244, 246, 0.65);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: color 0.25s ease;
+    }
+
+    .footer-col ul li a:hover {
+      color: var(--soft-accent);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(229, 225, 230, 0.1);
+      padding-top: 2.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+    }
+
+    .footer-bottom-links a {
+      color: rgba(243, 244, 246, 0.5);
+      text-decoration: none;
+      margin-left: 1.8rem;
+      transition: color 0.25s ease;
+    }
+
+    .footer-bottom-links a:hover {
+      color: #ffffff;
+    }
+
+    /* Custom Mobile Toggle Menu */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--brand);
+      cursor: pointer;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 968px) {
+      .footer-grid {
+        grid-template-cols: 1fr 1fr;
+        gap: 3rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+      
+      .hero h1 {
+        font-size: 2.8rem;
+      }
+      
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .hero-ctas {
+        flex-direction: column;
+        align-items: stretch;
+        max-width: 340px;
+        margin: 0 auto 3rem;
+      }
+      
+      .hero-stats {
+        grid-template-cols: 1fr;
+        gap: 1.8rem;
+      }
+
+      .cta-banner {
+        padding: 4rem 2rem;
+      }
+
+      .cta-banner h2 {
+        font-size: 2.2rem;
+      }
+      
+      .footer-grid {
+        grid-template-cols: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+      }
+      
+      .footer-brand p {
+        margin: 0 auto;
+      }
+      
+      .footer-bottom {
+        flex-direction: column;
+        gap: 1.2rem;
+        text-align: center;
+      }
+
+      .footer-bottom-links a {
+        margin: 0 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Navbar -->
+  <header id="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        RisholviiY<span class="logo-dot"></span>
+      </a>
+      
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#testimonials">Impact</a></li>
+        <li><a href="#join">Get Started</a></li>
+        <li><a href="#">Resources</a></li>
+      </ul>
+      
+      <div class="nav-actions">
+        <button class="mobile-menu-btn" id="mobile-toggle" aria-label="Toggle Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <a href="#" class="btn btn-outline" style="display: inline-block;">Log In</a>
+        <a href="#join" class="btn btn-primary" style="display: inline-block;">Register Hub</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero animate-item">
+    <div class="hero-pattern"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="hero-container">
+      <h1 class="animate-item delay-1">Perfect Academic Structure <span>Without The Chaos</span></h1>
+      <p class="animate-item delay-2">Manage institutes, courses, semesters, subjects, and resource PDFs in a beautifully linked relational database with granular, scope-restricted access.</p>
+      
+      <div class="hero-ctas animate-item delay-3">
+        <a href="#join" class="btn btn-highlight">Get Started Free</a>
+        <a href="#features" class="btn btn-accent">Explore Features</a>
+      </div>
+      
+      <div class="hero-stats animate-item delay-4">
+        <div class="stat-item">
+          <h3>25+</h3>
+          <p>Institutes Unified</p>
+        </div>
+        <div class="stat-item">
+          <h3>8,400+</h3>
+          <p>PYQs Tracked</p>
+        </div>
+        <div class="stat-item">
+          <h3>100%</h3>
+          <p>Hierarchy Scope</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Cards Section -->
+  <section id="features">
+    <div class="section-container">
+      <div class="section-header animate-item">
+        <h2>Uncompromised Organization</h2>
+        <p>A structure built deliberately for academic success. Discover how RisholviiY matches your exact workflow.</p>
+      </div>
+      
+      <div class="grid-3">
+        <!-- Card 1 -->
+        <div class="card animate-item delay-1">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <h3>Structured Hierarchy</h3>
+          <p>Institutes connect directly to Courses, Semesters, and Subjects, keeping every PDF organized under its exact chronological and logical space without orphan links.</p>
+        </div>
+        
+        <!-- Card 2 -->
+        <div class="card animate-item delay-2">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="22" x2="12" y2="18"></line>
+              <line x1="12" y1="6" x2="12" y2="2"></line>
+              <line x1="12" y1="12" x2="22" y2="12"></line>
+              <line x1="12" y1="12" x2="2" y2="12"></line>
+            </svg>
+          </div>
+          <h3>Scoped Admin Roles</h3>
+          <p>Assign limited administrative scopes to specific courses or institutes. Admins can upload papers and manage subjects only within their authorized parameters.</p>
+        </div>
+        
+        <!-- Card 3 -->
+        <div class="card animate-item delay-3">
+          <div class="card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <h3>Real-time Counter</h3>
+          <p>Track student engagement instantly. The system records view counts as students download or inspect PDFs, showcasing high-value papers effortlessly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial / Quote Section -->
+  <section id="testimonials" class="testimonial-section">
+    <div class="section-container">
+      <div class="testimonial-block animate-item">
+        <span class="quote-icon">“</span>
+        <blockquote class="testimonial-quote">
+          RisholviiY transformed how our department manages past exams. Instead of a messy folder structure or hard-to-navigate storage hubs, students select their specific course scope and instantly find the papers they need.
+        </blockquote>
+        <div class="testimonial-author">Prof. Rishabh Dev</div>
+        <div class="testimonial-role">Department of Academic Affairs, RISE Institute</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner Section -->
+  <section id="join">
+    <div class="section-container">
+      <div class="cta-banner animate-item">
+        <h2>Ready to unify your resource pipeline?</h2>
+        <p>Get started today by establishing your university logo, customizing degrees, uploading papers, and inviting limited admin scopes.</p>
+        <a href="#" class="btn btn-highlight" id="cta-btn">Initialize Workspace</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-grid animate-item">
+        <div class="footer-brand">
+          <h3>RisholviiY<span class="logo-dot"></span></h3>
+          <p>Unifying academic resource hierarchies with secure role-based controls and premium real-time view tracking systems.</p>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+            <li><a href="#join">Create Space</a></li>
+            <li><a href="#">Hierarchy Map</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Our Vision</a></li>
+            <li><a href="#">Academic Partners</a></li>
+            <li><a href="#">Privacy Standard</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Developer Documentation</a></li>
+            <li><a href="#">API Access</a></li>
+            <li><a href="#">Status Check</a></li>
+            <li><a href="#">Support Hub</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom animate-item delay-2">
+        <p>&copy; 2026 RisholviiY Platform. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="#">Terms of Use</a>
+          <a href="#">Privacy Settings</a>
+          <a href="#">Cookie Policies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Pure Vanilla JavaScript Dynamic Operations -->
+  <script>
+    // 1. Sticky Navbar Dynamic Shadow effect on scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // 2. Interactive Entrance Animations triggering on Scroll Intersection
+    const animatedElements = document.querySelectorAll('.animate-item');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = 1;
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.15
+    });
+
+    animatedElements.forEach(el => {
+      observer.observe(el);
+    });
+
+    // 3. Dynamic Micro-Interaction on initialize workspace click
+    const ctaBtn = document.getElementById('cta-btn');
+    ctaBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      ctaBtn.innerHTML = "Workspace Preparing...";
+      ctaBtn.style.transform = "scale(0.95)";
+      
+      setTimeout(() => {
+        ctaBtn.innerHTML = "Workspace Ready!";
+        ctaBtn.style.transform = "scale(1)";
+        ctaBtn.style.backgroundColor = "var(--brand-accent)";
+        alert("Welcome to RisholviiY! Your academic hierarchy platform is ready for configuration.");
+      }, 1500);
+    });
+
+    // 4. Mobile responsive menu alert interaction
+    const mobileToggle = document.getElementById('mobile-toggle');
+    mobileToggle.addEventListener('click', () => {
+      alert("Mobile drawer navigation opened! RisholviiY layout is completely responsive and mobile-friendly.");
+    });
+  </script>
+</body>
+</html>
