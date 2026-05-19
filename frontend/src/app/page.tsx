@@ -946,8 +946,10 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
               <ellipse cx="122" cy="192" rx="7" ry="4" fill="#E88830" transform="rotate(50 122 192)" />
             </svg>
 
-            <p className="relative z-10 mt-3 text-sm font-semibold text-[#7B3060]">Turn your ideas into reality.</p>
-            <p className="relative z-10 mt-1 text-xs text-[#A06080] text-center">Start for free and get attractive offers</p>
+            <p className="relative z-10 mt-3 text-sm font-semibold text-[#7B3060]">
+              Ace your exams with previous year questions.
+            </p>
+
           </div>
 
           {/* Title */}
@@ -955,7 +957,7 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
             {mode === "login" ? "Login to your Account" : "Create account"}
           </h2>
           <p className="mt-1 mb-6 text-sm text-gray-400">
-            See what is going on with your business
+            Track your exam preparation and performance in one place
           </p>
 
           {/* Toast */}
@@ -991,11 +993,11 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
             </button>
           </p>
 
-          {/* Credit */}
-          <p className="mt-8 text-center text-[10px] text-gray-300">
-            Designed &amp; Developed by{" "}
-            <span className="font-semibold text-[#C97AA0]">Rishabh Bisht</span>
-          </p>
+          {/* Animated Credit */}
+          <div className="animated-credit-container">
+            <span className="animated-credit-label">Designed &amp; Developed By</span>
+            <span className="animated-credit-name">Rishabh Bisht</span>
+          </div>
 
         </div>
       </section>
