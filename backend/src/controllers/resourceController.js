@@ -1203,6 +1203,86 @@ async function clearChatHistory(req, res) {
   }
 }
 
+async function getSystemStats(req, res) {
+  try {
+    const mongoose = require("mongoose");
+    let dbStats = {
+      collections: 0,
+      objects: 0,
+      dataSize: 0,
+      storageSize: 0,
+      indexSize: 0,
+      ok: false
+    };
+    
+    try {
+      const stats = await mongoose.connection.db.stats();
+      dbStats = {
+        collections: stats.collections || 0,
+        objects: stats.objects || 0,
+        dataSize: stats.dataSize || 0,
+        storageSize: stats.storageSize || 0,
+        indexSize: stats.indexSize || 0,
+        ok: true
+      };
+    } catch (dbErr) {
+      console.error("Failed to fetch MongoDB stats:", dbErr);
+    }
+
+    let cloudinaryStats = {
+      plan: "N/A",
+      resources: 0,
+      storage: { usage: 0, limit: 0, used_percent: 0 },
+      bandwidth: { usage: 0, limit: 0, used_percent: 0 },
+      ok: false
+    };
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (cloudName && apiKey && apiSecret) {
+      try {
+        const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/usage`, {
+          headers: {
+            Authorization: `Basic ${auth}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          cloudinaryStats = {
+            plan: data.plan || "Free",
+            resources: data.resources || 0,
+            storage: {
+              usage: data.storage?.usage || 0,
+              limit: data.storage?.limit || 0,
+              used_percent: data.storage?.used_percent || 0
+            },
+            bandwidth: {
+              usage: data.bandwidth?.usage || 0,
+              limit: data.bandwidth?.limit || 0,
+              used_percent: data.bandwidth?.used_percent || 0
+            },
+            ok: true
+          };
+        } else {
+          console.error("Cloudinary usage API returned non-200:", response.statusText);
+        }
+      } catch (cloudErr) {
+        console.error("Failed to fetch Cloudinary stats:", cloudErr);
+      }
+    }
+
+    res.json({
+      db: dbStats,
+      cloudinary: cloudinaryStats
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 module.exports = {
   listInstitutes,
   createInstitute,
@@ -1233,4 +1313,5 @@ module.exports = {
   borrowTokens,
   getChatHistory,
   clearChatHistory,
+  getSystemStats,
 };

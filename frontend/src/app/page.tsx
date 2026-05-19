@@ -20,11 +20,22 @@ import {
   Menu,
   X,
   Activity,
+  Database,
+  Cloud,
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { API_URL, api, asset } from "@/lib/api";
 import ApiUsagePanel from "./components/ApiUsagePanel";
+
+const formatBytes = (bytes: number, decimals = 2) => {
+  if (!bytes) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+};
 
 const getIdStr = (obj: any): string => {
   if (!obj) return "";
@@ -107,6 +118,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tokenUsage, setTokenUsage] = useState<{ totalToday: number; dailyLimit: number; percentage: number } | null>(null);
+  const [systemStats, setSystemStats] = useState<any | null>(null);
   const [userTokenStatus, setUserTokenStatus] = useState<{
     used: number;
     limit: number;
@@ -175,7 +187,7 @@ export default function Home() {
     setPyqs(pyqData.pyqs);
     if (isSuper) {
       try {
-        const [userData, tokenData] = await Promise.all([
+        const [userData, tokenData, statsData] = await Promise.all([
           authed<{ users: User[] }>("/users"),
           authed<{
             combinedSummary: {
@@ -184,6 +196,7 @@ export default function Home() {
               percentage: number;
             };
           }>("/admin/token-usage"),
+          authed<any>("/admin/system-stats"),
         ]);
         setUsers(userData.users);
         setTokenUsage({
@@ -191,6 +204,7 @@ export default function Home() {
           dailyLimit: tokenData.combinedSummary.totalLimit,
           percentage: tokenData.combinedSummary.percentage,
         });
+        setSystemStats(statsData);
       } catch (err) {
         console.error("Failed to load Super Admin dashboard details:", err);
       }
@@ -670,6 +684,7 @@ export default function Home() {
               onView={viewPyq}
               setShowOnboarding={setShowOnboarding}
               tokenUsage={tokenUsage}
+              systemStats={systemStats}
               userTokenStatus={userTokenStatus}
               borrowLoading={borrowLoading}
               handleBorrowCredits={handleBorrowCredits}
@@ -991,14 +1006,10 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
           </p>
 
           {/* Premium Aesthetic Floating Developed Badge */}
-          <div className="premium-developer-badge">
-            <span className="premium-badge-label">Designed &amp; Developed By</span>
-            <div className="premium-badge-capsule">
-              <div className="premium-badge-inner">
-                <span className="premium-badge-name">Rishabh Bisht</span>
-                <span className="premium-badge-sparkle">✨</span>
-              </div>
-            </div>
+          <div className="group fixed bottom-5 right-5 z-50 flex flex-col items-end gap-1.5">
+
+
+
           </div>
 
         </div>
@@ -1062,6 +1073,7 @@ function Overview({
   onView,
   setShowOnboarding,
   tokenUsage,
+  systemStats,
   userTokenStatus,
   borrowLoading,
   handleBorrowCredits,
@@ -1077,6 +1089,7 @@ function Overview({
   onView?: (id: string) => void;
   setShowOnboarding: (show: boolean) => void;
   tokenUsage?: { totalToday: number; dailyLimit: number; percentage: number } | null;
+  systemStats?: any | null;
   userTokenStatus: any;
   borrowLoading: boolean;
   handleBorrowCredits: () => Promise<void>;
@@ -1322,6 +1335,127 @@ function Overview({
                   }`}
                 style={{ width: `${tokenUsage.percentage}%` }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSuper && systemStats && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* MongoDB Metrics Card */}
+          <div className="rounded-xl border border-[var(--line)] bg-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                  <Database size={18} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-800">MongoDB Database</h3>
+                  <p className="text-[10px] text-gray-400">Total stored collection metrics</p>
+                </div>
+              </div>
+              <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider border ${systemStats.db?.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+                {systemStats.db?.ok ? 'Connected' : 'Offline'}
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-center">
+                  <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Total Documents</span>
+                  <span className="text-lg font-black text-gray-700 mt-0.5">{(systemStats.db?.objects || 0).toLocaleString()}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-center">
+                  <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Collections</span>
+                  <span className="text-lg font-black text-gray-700 mt-0.5">{systemStats.db?.collections || 0}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-bold text-gray-500">
+                  <span>Data Size</span>
+                  <span className="text-gray-700 font-semibold">{formatBytes(systemStats.db?.dataSize || 0)}</span>
+                </div>
+                <div className="flex justify-between text-xs font-bold text-gray-500">
+                  <span>Storage Size</span>
+                  <span className="text-gray-700 font-semibold">{formatBytes(systemStats.db?.storageSize || 0)}</span>
+                </div>
+                <div className="flex justify-between text-xs font-bold text-gray-500">
+                  <span>Index Size</span>
+                  <span className="text-gray-700 font-semibold">{formatBytes(systemStats.db?.indexSize || 0)}</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold">
+                <span className="text-gray-400 text-[10px]">Total Database Footprint</span>
+                <span className="text-[var(--brand)] font-extrabold">{formatBytes((systemStats.db?.storageSize || 0) + (systemStats.db?.indexSize || 0))}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Cloudinary Metrics Card */}
+          <div className="rounded-xl border border-[var(--line)] bg-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                  <Cloud size={18} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-800">Cloudinary Assets</h3>
+                  <p className="text-[10px] text-gray-400">PDFs, images & logo storage</p>
+                </div>
+              </div>
+              <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider border ${systemStats.cloudinary?.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+                {systemStats.cloudinary?.ok ? `${systemStats.cloudinary?.plan} Plan` : 'Config Error'}
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-center">
+                  <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Total Hosted Files</span>
+                  <span className="text-lg font-black text-gray-700 mt-0.5">{(systemStats.cloudinary?.resources || 0).toLocaleString()}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex flex-col justify-center">
+                  <span className="text-[9px] font-extrabold uppercase text-gray-400 tracking-wider">Storage Used %</span>
+                  <span className="text-lg font-black text-gray-700 mt-0.5">{(systemStats.cloudinary?.storage?.used_percent || 0).toFixed(2)}%</span>
+                </div>
+              </div>
+
+              {/* Progress Bars */}
+              <div className="space-y-3">
+                {/* 1. Storage */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-gray-500">
+                    <span>Cloud Storage Occupancy</span>
+                    <span className="text-gray-700">
+                      {formatBytes(systemStats.cloudinary?.storage?.usage || 0)} / {formatBytes(systemStats.cloudinary?.storage?.limit || 0)}
+                    </span>
+                  </div>
+                  <div className="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
+                      style={{ width: `${Math.min(100, systemStats.cloudinary?.storage?.used_percent || 0)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Bandwidth */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold text-gray-500">
+                    <span>Monthly Bandwidth Usage</span>
+                    <span className="text-gray-700">
+                      {formatBytes(systemStats.cloudinary?.bandwidth?.usage || 0)} / {formatBytes(systemStats.cloudinary?.bandwidth?.limit || 0)}
+                    </span>
+                  </div>
+                  <div className="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 transition-all duration-500"
+                      style={{ width: `${Math.min(100, systemStats.cloudinary?.bandwidth?.used_percent || 0)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

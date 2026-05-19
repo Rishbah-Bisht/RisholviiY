@@ -108,9 +108,12 @@ button {
 
 /* ── Premium Aesthetic Developer Badge Keyframes ── */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px) scale(1);
   }
+
   50% {
     transform: translateY(-6px) scale(1.015);
   }
@@ -120,18 +123,23 @@ button {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
 
 @keyframes gold-shine {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: drop-shadow(0 0 1px rgba(201, 94, 114, 0.15));
   }
+
   50% {
     filter: drop-shadow(0 0 6px rgba(201, 94, 114, 0.45)) drop-shadow(0 0 2px rgba(232, 136, 48, 0.25));
   }
@@ -164,15 +172,14 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5px; /* Border thickness */
-  background: linear-gradient(
-    270deg,
-    #7B3060,
-    #C95E72,
-    #E88830,
-    #C95E72,
-    #7B3060
-  );
+  padding: 1.5px;
+  /* Border thickness */
+  background: linear-gradient(270deg,
+      #7B3060,
+      #C95E72,
+      #E88830,
+      #C95E72,
+      #7B3060);
   background-size: 400% 400%;
   animation: rotate-gradient 5s ease infinite;
   border-radius: 9999px;
@@ -193,12 +200,10 @@ button {
 }
 
 .premium-badge-name {
-  background: linear-gradient(
-    90deg,
-    #7B3060 0%,
-    #C95E72 50%,
-    #E88830 100%
-  );
+  background: linear-gradient(90deg,
+      #7B3060 0%,
+      #C95E72 50%,
+      #E88830 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

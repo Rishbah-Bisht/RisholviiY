@@ -40,6 +40,7 @@ router.get("/users", requireRole("super_admin"), asyncHandler(c.listUsers));
 router.post("/users", requireRole("super_admin"), asyncHandler(c.createUser));
 router.patch("/users/:id/role", requireRole("super_admin"), asyncHandler(c.assignAdmin));
 router.get("/admin/token-usage", requireRole("super_admin"), asyncHandler(c.getTokenUsage));
+router.get("/admin/system-stats", requireRole("super_admin"), asyncHandler(c.getSystemStats));
 router.get("/users/token-status", asyncHandler(c.getUserTokenStatus));
 router.post("/users/borrow", asyncHandler(c.borrowTokens));
 
