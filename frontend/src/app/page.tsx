@@ -990,18 +990,14 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
             </button>
           </p>
 
-          {/* Premium Animated Developed Badge */}
-          <div className="mt-8 flex flex-col items-center justify-center gap-1.5 opacity-90 hover:opacity-100 transition-all duration-300 select-none">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-gray-400 font-semibold">
-              Designed &amp; Developed By
-            </span>
-            <div className="relative group cursor-default">
-              {/* Glowing animated gradient outline */}
-              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#9B3060] via-[#C95E72] to-[#E88830] opacity-70 blur-xs group-hover:opacity-100 group-hover:blur-sm transition duration-500 animate-pulse" />
-              {/* Inner container */}
-              <span className="relative flex items-center justify-center bg-white px-3.5 py-1 rounded-full text-xs font-bold text-[#7B3060] border border-[#FAF0E8] shadow-sm transition-all duration-300 transform group-hover:scale-105">
-                Rishabh Bisht <span className="ml-1 text-[#C95E72] animate-bounce">✨</span>
-              </span>
+          {/* Premium Aesthetic Floating Developed Badge */}
+          <div className="premium-developer-badge">
+            <span className="premium-badge-label">Designed &amp; Developed By</span>
+            <div className="premium-badge-capsule">
+              <div className="premium-badge-inner">
+                <span className="premium-badge-name">Rishabh Bisht</span>
+                <span className="premium-badge-sparkle">✨</span>
+              </div>
             </div>
           </div>
 
