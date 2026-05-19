@@ -1120,7 +1120,7 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
 
           {/* Switch mode */}
           <p className="mt-6 text-center text-xs text-gray-400">
-            {mode === "login" ? "New to PYQ Hub? " : "Already have an account? "}
+            {mode === "login" ? "New to RisholviiY? " : "Already have an account? "}
             <button
               type="button"
               onClick={() => setMode(mode === "login" ? "register" : "login")}
