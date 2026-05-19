@@ -16,6 +16,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://risholviiy.vercel.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: "RisholviiY",
+  icons: {
+    icon: "/icon.jpg",
+    apple: "/icon.jpg",
+  },
   title: {
     default: "RisholviiY | Free PYQ Papers for Dehradun Colleges",
     template: "%s | RisholviiY"
@@ -113,6 +118,14 @@ const jsonLd = {
   }
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RisholviiY",
+  "alternateName": ["RisholviiY PYQ", "RisholviiY Dehradun"],
+  "url": "https://risholviiy.vercel.app"
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -127,6 +140,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
