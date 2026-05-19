@@ -20,10 +20,15 @@ function userPayload(user) {
 function getGoogleOAuthConfig() {
   const clientID = process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET;
-  const callbackURL =
+  let callbackURL =
     process.env.GOOGLE_CALLBACK_URL ||
     process.env.AUTH_GOOGLE_CALLBACK_URL ||
     "http://localhost:5000/api/auth/google/callback";
+
+  if (callbackURL) {
+    // Automatically fix double slashes (e.g. domain.com//api -> domain.com/api)
+    callbackURL = callbackURL.replace(/([^:]\/)\/+/g, "$1");
+  }
 
   return { clientID, clientSecret, callbackURL };
 }
