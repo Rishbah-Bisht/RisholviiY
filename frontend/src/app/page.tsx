@@ -91,14 +91,9 @@ const nav = [
 ];
 
 export default function Home() {
-  const [token, setToken] = useState(() =>
-    typeof window === "undefined" ? "" : localStorage.getItem("pyq_token") || ""
-  );
+  const [token, setToken] = useState("");
   const [user, setUser] = useState<User | null>(null);
-  const [bootstrapping, setBootstrapping] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return !!localStorage.getItem("pyq_token");
-  });
+  const [bootstrapping, setBootstrapping] = useState(true);
   const [active, setActive] = useState("overview");
   const [toast, setToast] = useState<Toast>(null);
   const [loading, setLoading] = useState(false);
@@ -238,12 +233,14 @@ export default function Home() {
 
   useEffect(() => {
     async function bootstrap() {
-      if (!token) {
+      const savedToken = localStorage.getItem("pyq_token");
+      if (!savedToken) {
         setBootstrapping(false);
         return;
       }
+      setToken(savedToken);
       try {
-        const data = await api<{ user: User }>("/auth/me", { token });
+        const data = await api<{ user: User }>("/auth/me", { token: savedToken });
         applyUser(data.user);
       } catch {
         localStorage.removeItem("pyq_token");
@@ -253,7 +250,7 @@ export default function Home() {
       }
     }
     bootstrap();
-  }, [applyUser, token]);
+  }, [applyUser]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
