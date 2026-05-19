@@ -1117,96 +1117,71 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
 
 
           {/* Login / Register Form */}
-          <form onSubmit={submit} className="space-y-4">
-            {mode === "register" && (
+          {mode === "login" ? (
+            <form onSubmit={submit} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Full Name</label>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Email Address</label>
                 <input
-                  type="text"
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Rishabh Bisht"
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
                   required
                   className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
                 />
               </div>
-            )}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-xl bg-[#9B3060] hover:bg-[#7B2450] text-white py-3 text-xs font-bold uppercase tracking-wider active:scale-[0.99] transition-all cursor-pointer select-none shadow-md shadow-[#9B3060]/10 flex items-center justify-center gap-2"
-            >
-              {busy ? (
-                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : mode === "login" ? (
-                "Sign In"
-              ) : (
-                "Create Account"
-              )}
-            </button>
-          </form>
-
-          {/* Quick Demo Credentials for Login Mode */}
-          {mode === "login" && (
-            <div className="mt-4 p-3 rounded-xl border border-[#9B3060]/10 bg-[#FAF0E8]/40 space-y-2">
-              <p className="text-[9px] font-extrabold uppercase tracking-wider text-[#A06080] text-center">Quick Demo Access</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill("admin")}
-                  className="rounded-lg bg-white border border-[#9B3060]/20 px-2 py-1.5 text-[10px] font-bold text-[#9B3060] hover:bg-[#FAF0E8] transition active:scale-95 cursor-pointer"
-                >
-                  Fill Super Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill("student")}
-                  className="rounded-lg bg-white border border-[#9B3060]/20 px-2 py-1.5 text-[10px] font-bold text-[#9B3060] hover:bg-[#FAF0E8] transition active:scale-95 cursor-pointer"
-                >
-                  Fill Demo Student
-                </button>
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500 mb-1.5">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-[#9B3060] transition-colors bg-gray-50/50"
+                />
               </div>
+
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-xl bg-[#9B3060] hover:bg-[#7B2450] text-white py-3 text-xs font-bold uppercase tracking-wider active:scale-[0.99] transition-all cursor-pointer select-none shadow-md shadow-[#9B3060]/10 flex items-center justify-center gap-2"
+              >
+                {busy ? (
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="rounded-xl border border-[#9B3060]/15 bg-[#FAF0E8]/40 p-5 text-center space-y-2">
+              <span className="text-xl">💡</span>
+              <p className="text-xs font-bold text-[#9B3060]">Secure Google Registration</p>
+              <p className="text-[11px] text-gray-500 leading-relaxed">
+                New accounts must be registered using Google to ensure secure academic profile synchronization.
+              </p>
             </div>
           )}
 
           {/* Or Continue With Divider */}
-          <div className="relative my-6 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
+          {mode === "login" ? (
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-100"></div>
+              </div>
+              <span className="relative bg-white px-3 text-[10px] font-extrabold uppercase tracking-wider text-gray-300">
+                Continue With
+              </span>
             </div>
-            <span className="relative bg-white px-3 text-[10px] font-extrabold uppercase tracking-wider text-gray-300">
-              Continue With
-            </span>
-          </div>
+          ) : (
+            <div className="h-4" />
+          )}
 
           {/* Google Sign In */}
-          < a
+          <a
             href={`${API_URL}/auth/google`}
             className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-gray-200 px-4 py-3 text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.99] transition-all cursor-pointer select-none shadow-sm"
           >
@@ -1216,7 +1191,7 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            Continue with Google
+            {mode === "login" ? "Continue with Google" : "Register with Google"}
           </a>
 
           {/* Switch mode */}
