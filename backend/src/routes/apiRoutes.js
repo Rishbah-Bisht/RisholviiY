@@ -24,7 +24,7 @@ router.put("/semesters/:id", requireRole("super_admin"), asyncHandler(c.updateSe
 router.delete("/semesters/:id", requireRole("super_admin"), asyncHandler(c.deleteSemester));
 
 router.get("/subjects", asyncHandler(c.listSubjects));
-router.post("/subjects", requireRole("super_admin"), asyncHandler(c.createSubject));
+router.post("/subjects", requireRole("super_admin", "admin"), asyncHandler(c.createSubject));
 router.put("/subjects/:id", requireRole("super_admin"), asyncHandler(c.updateSubject));
 router.delete("/subjects/:id", requireRole("super_admin"), asyncHandler(c.deleteSubject));
 

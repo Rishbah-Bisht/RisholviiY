@@ -126,6 +126,50 @@ const websiteJsonLd = {
   "url": "https://risholviiy.vercel.app"
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How can I access and download solved previous year papers on RisholviiY?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can access and practice solved previous year papers (PYQs) online directly on RisholviiY. The platform provides chapter-wise filtering and offers options to view step-by-step solutions or download clean PDF versions for offline study."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does RisholviiY support timed Online PYQ Practice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. RisholviiY features a simulated CBT (Computer Based Test) practice mode where you can solve previous year papers under real exam constraints, complete with detailed exam analytics to track your speed and score."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are the instant solutions on RisholviiY verified?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, every past paper comes with verified, step-by-step Instant Solutions. You also receive AI-powered insights, key formula callouts, and recommendations to avoid common errors."
+      }
+    }
+  ]
+};
+
+const courseJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "@id": "https://risholviiy.vercel.app/#course",
+  "name": "Academic Previous Year Solved Papers Practice",
+  "description": "Master university and board exams with chapter-wise solved questions, detailed step-by-step explanations, and real-time computer-based mock tests.",
+  "provider": {
+    "@type": "Organization",
+    "name": "RisholviiY",
+    "url": "https://risholviiy.vercel.app"
+  }
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -144,6 +188,14 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
         />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>

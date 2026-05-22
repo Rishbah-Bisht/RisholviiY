@@ -116,7 +116,7 @@ export default function AiAssistantClient({ initialPyqId }: { initialPyqId: stri
     cycleChatsCompleted?: number;
   } | null>(null);
   const [borrowLoading, setBorrowLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("groq");
+  const [selectedModel, setSelectedModel] = useState("auto");
 
   const showSidebar = sidebarOpen;
   const isSuper = user?.role === "super_admin";
@@ -378,7 +378,10 @@ export default function AiAssistantClient({ initialPyqId }: { initialPyqId: stri
       } else if (!response.ok) {
         throw new Error(data.message || "Failed to get an AI response");
       } else {
-        setChatHistory((current) => [...current, { role: "ai", content: data.insight }]);
+        const routerNote = data.routerDecision
+          ? `🧠 *Smart Router → **${data.routerDecision.selected_model}** — ${data.routerDecision.reasoning}*\n\n---\n\n`
+          : "";
+        setChatHistory((current) => [...current, { role: "ai", content: routerNote + data.insight }]);
       }
 
       fetchTokenStatus();
@@ -675,6 +678,7 @@ export default function AiAssistantClient({ initialPyqId }: { initialPyqId: stri
                         onChange={(e) => setSelectedModel(e.target.value)}
                         className="text-xs font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-2 py-0.5 outline-none cursor-pointer focus:border-[var(--brand)] focus:bg-white transition max-w-[160px] xs:max-w-[200px] sm:max-w-none"
                       >
+                        <option value="auto">⚡ Auto (Smart Router)</option>
                         <option value="groq">Llama 3.3 (Groq)</option>
                         <option value="gemini:gemini-2.5-flash">Gemini 2.5 Flash</option>
                         <option value="gemini:gemini-2.5-pro">Gemini 2.5 Pro</option>

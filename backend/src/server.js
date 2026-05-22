@@ -50,7 +50,11 @@ if (isVercel) {
   });
 }
 
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+const uploadsDir = isVercel
+  ? path.join("/tmp", "uploads")
+  : path.join(__dirname, "..", "uploads");
+
+app.use("/uploads", express.static(uploadsDir));
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/auth", authRoutes);

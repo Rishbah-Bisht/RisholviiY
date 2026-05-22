@@ -5,6 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RisholviiY — Premium Hierarchy-Aligned Academic Resource Hub</title>
   
+  <!-- Structured Data JSON-LD Schema (FAQ, EducationalApplication & Course) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "FAQPage",
+        "@id": "https://risholviiy.vercel.app/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How can I access and download solved previous year papers on RisholviiY?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You can access and practice solved previous year papers (PYQs) online directly on RisholviiY. The platform provides chapter-wise filtering and offers options to view step-by-step solutions or download clean PDF versions for offline study."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does RisholviiY support timed Online PYQ Practice?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. RisholviiY features a simulated CBT (Computer Based Test) practice mode where you can solve previous year papers under real exam constraints, complete with detailed exam analytics to track your speed and score."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are the instant solutions on RisholviiY verified?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, every past paper comes with verified, step-by-step Instant Solutions. You also receive AI-powered insights, key formula callouts, and recommendations to avoid common errors."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "EducationalApplication",
+        "@id": "https://risholviiy.vercel.app/#application",
+        "name": "RisholviiY Academic Resource Platform",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Web",
+        "url": "https://risholviiy.vercel.app",
+        "description": "RisholviiY is a premium, minimal Web App providing chapter-wise solved papers, online PYQ practice, instant solutions, and detailed exam analytics.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "INR"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Rishabh Bisht"
+        }
+      },
+      {
+        "@type": "Course",
+        "@id": "https://risholviiy.vercel.app/#course",
+        "name": "Academic Previous Year Solved Papers Practice",
+        "description": "Master university and board exams with chapter-wise solved questions, detailed step-by-step explanations, and real-time computer-based mock tests.",
+        "provider": {
+          "@type": "Organization",
+          "name": "RisholviiY",
+          "url": "https://risholviiy.vercel.app"
+        }
+      }
+    ]
+  }
+  </script>
+  
   <!-- Preconnect & Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,26 +427,36 @@
       margin: 0 auto;
     }
 
-    /* Features Grid */
-    .grid-3 {
+    /* Bento Grid Features Layout */
+    .bento-grid {
       display: grid;
-      grid-template-cols: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2.2rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.8rem;
     }
 
-    .card {
-      background-color: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 2.2rem 2rem;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    .bento-card {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(229, 225, 230, 0.5);
+      border-radius: 20px;
+      padding: 2.5rem 2.2rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
-      height: 100%;
       position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(122, 40, 84, 0.02);
     }
 
-    .card::before {
+    .bento-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(122, 40, 84, 0.3);
+      box-shadow: 0 20px 40px rgba(122, 40, 84, 0.08);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .bento-card::before {
       content: '';
       position: absolute;
       top: 0;
@@ -386,24 +464,25 @@
       right: 0;
       height: 4px;
       background-color: transparent;
-      border-radius: 14px 14px 0 0;
       transition: background-color 0.3s ease;
     }
 
-    .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(36, 22, 33, 0.06);
-      border-color: var(--line);
-    }
-
-    .card:hover::before {
+    .bento-card:hover::before {
       background-color: var(--brand);
     }
 
-    .card-icon {
+    .bento-large {
+      grid-column: span 2;
+    }
+
+    .bento-medium {
+      grid-column: span 1;
+    }
+
+    .bento-card-icon {
       width: 52px;
       height: 52px;
-      border-radius: 10px;
+      border-radius: 12px;
       background-color: rgba(122, 40, 84, 0.08);
       display: grid;
       place-items: center;
@@ -412,21 +491,22 @@
       transition: all 0.3s ease;
     }
 
-    .card:hover .card-icon {
+    .bento-card:hover .bento-card-icon {
       background-color: var(--brand);
       color: #ffffff;
       transform: scale(1.05);
     }
 
-    .card h3 {
-      font-size: 1.45rem;
+    .bento-card h3 {
+      font-size: 1.5rem;
       color: var(--foreground);
       margin-bottom: 0.85rem;
+      font-family: 'DM Serif Display', serif;
     }
 
-    .card p {
+    .bento-card p {
       color: var(--muted);
-      font-size: 0.96rem;
+      font-size: 0.98rem;
       line-height: 1.6;
       flex-grow: 1;
     }
@@ -616,6 +696,15 @@
         grid-template-cols: 1fr 1fr;
         gap: 3rem;
       }
+      
+      .bento-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .bento-large {
+        grid-column: span 1;
+      }
     }
 
     @media (max-width: 768px) {
@@ -742,46 +831,59 @@
   <section id="features">
     <div class="section-container">
       <div class="section-header animate-item">
-        <h2>Uncompromised Organization</h2>
-        <p>A structure built deliberately for academic success. Discover how RisholviiY matches your exact workflow.</p>
+        <h2>Intelligent Academic Organization</h2>
+        <p>A precision-engineered platform designed deliberately for college preparation and exam success.</p>
       </div>
       
-      <div class="grid-3">
-        <!-- Card 1 -->
-        <div class="card animate-item delay-1">
-          <div class="card-icon">
+      <div class="bento-grid">
+        <!-- Feature 1: Chapter-wise & Topic-wise filtering (Bento Large) -->
+        <div class="bento-card bento-large animate-item delay-1">
+          <div class="bento-card-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              <path d="M4 6h16M4 12h16M4 18h7"></path>
             </svg>
           </div>
-          <h3>Structured Hierarchy</h3>
-          <p>Institutes connect directly to Courses, Semesters, and Subjects, keeping every PDF organized under its exact chronological and logical space without orphan links.</p>
+          <h3>Granular Chapter & Topic Filters</h3>
+          <p>Stop wasting hours scrolling through massive, unorganized PDFs. Target your preparation with laser precision by filtering past questions down to specific chapters and topics. Elevate your study sessions with curated <strong>Online PYQ Practice</strong> that focuses exactly on your current weak spots.</p>
         </div>
         
-        <!-- Card 2 -->
-        <div class="card animate-item delay-2">
-          <div class="card-icon">
+        <!-- Feature 2: Detailed step-by-step solutions with AI Insights (Bento Medium) -->
+        <div class="bento-card bento-medium animate-item delay-2">
+          <div class="bento-card-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="22" x2="12" y2="18"></line>
-              <line x1="12" y1="6" x2="12" y2="2"></line>
-              <line x1="12" y1="12" x2="22" y2="12"></line>
-              <line x1="12" y1="12" x2="2" y2="12"></line>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l-7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
             </svg>
           </div>
-          <h3>Scoped Admin Roles</h3>
-          <p>Assign limited administrative scopes to specific courses or institutes. Admins can upload papers and manage subjects only within their authorized parameters.</p>
+          <h3>Instant Solutions & AI Insights</h3>
+          <p>Get past the roadblock of incorrect answers immediately. Every question features verified, step-by-step <strong>Instant Solutions</strong>. Supercharge your learning with AI-driven insights that highlight underlying concepts, alternative solving methods, and common exam traps.</p>
         </div>
         
-        <!-- Card 3 -->
-        <div class="card animate-item delay-3">
-          <div class="card-icon">
+        <!-- Feature 3: Live CBT (Computer Based Test) simulator mode (Bento Medium) -->
+        <div class="bento-card bento-medium animate-item delay-3">
+          <div class="bento-card-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
           </div>
-          <h3>Real-time Counter</h3>
-          <p>Track student engagement instantly. The system records view counts as students download or inspect PDFs, showcasing high-value papers effortlessly.</p>
+          <h3>Live CBT Simulation</h3>
+          <p>Acclimatize to real exam pressure before the big day. Replicate actual exam hall environments with our immersive Computer Based Test simulator. Practice with strict time constraints, custom navigation, and test-taking telemetry built to build speed and stamina.</p>
+        </div>
+        
+        <!-- Feature 4: Performance tracker dashboard (Bento Large) -->
+        <div class="bento-card bento-large animate-item delay-4">
+          <div class="bento-card-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+          <h3>Advanced Exam Analytics</h3>
+          <p>Visualize your path to academic excellence. Our real-time performance dashboard tracks your practice history, identifies persistent knowledge gaps, and provides detailed <strong>Exam Analytics</strong>. Monitor your speed, accuracy, and syllabus completion rate in one unified interface.</p>
         </div>
       </div>
     </div>

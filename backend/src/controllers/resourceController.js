@@ -16,14 +16,18 @@ const {
   deleteSubjectTree,
 } = require("../utils/cascade");
 
+const isVercel = process.env.VERCEL || process.env.NOW_REGION || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === "production";
+
+const uploadsRoot = isVercel
+  ? path.join("/tmp", "uploads")
+  : path.join(__dirname, "..", "..", "uploads");
+
 const fileUrl = (req) => {
   if (!req.file) return undefined;
-  const uploadsRoot = path.join(__dirname, "..", "..", "uploads");
   const relativeDir = path.relative(uploadsRoot, req.file.destination).replaceAll("\\", "/");
   return `/uploads/${relativeDir}/${req.file.filename}`;
 };
 
-const uploadsRoot = path.join(__dirname, "..", "..", "uploads");
 const MAX_PDF_BYTES = 12 * 1024 * 1024;
 const MIN_USEFUL_PDF_TEXT_CHARS = 120;
 const MAX_PROMPT_CHARS = 18000;
@@ -48,7 +52,97 @@ const normalizePaperText = (value = "") =>
     .replace(/\s+/g, " ")
     .trim();
 
-async function callAIWithFailover(messages, preferredProvider, openRouterModel) {
+/**
+ * LLM Router – selects the optimal model based on query complexity.
+ * Runs entirely in-process (no extra API call).
+ *
+ * Tiers:
+ *   HIGH   → Gemini 2.5 Pro / Llama 3.3 Groq  (complex reasoning, math, code)
+ *   MID    → Gemini 2.5 Flash                  (general, summarising, formatting)
+ *   FREE   → Qwen 3 8B / Mistral 7B / etc.     (simple, casual, greetings)
+ */
+function routeQuery(question, conversationHistory = [], paperTextLength = 0) {
+  const q = (question || "").toLowerCase().trim();
+  const wordCount = q.split(/\s+/).filter(Boolean).length;
+  const historyDepth = conversationHistory.length;
+
+  // ── keyword sets ──
+  const HIGH_KEYWORDS = [
+    "derive", "prove", "proof", "integration", "differentiate", "differential",
+    "equation", "matrix", "eigenvalue", "laplace", "fourier", "theorem",
+    "algorithm", "complexity", "pseudocode", "code", "program", "debug",
+    "compile", "recursion", "dynamic programming", "data structure",
+    "explain in detail", "step by step", "compare and contrast",
+    "critical analysis", "evaluate", "justify", "numerical", "calculate",
+    "solve", "derivation", "formula", "graph theory",
+  ];
+
+  const MID_KEYWORDS = [
+    "summarize", "summary", "list", "format", "rewrite", "paraphrase",
+    "translate", "explain", "describe", "overview", "outline", "topics",
+    "important", "patterns", "tips", "strategy", "weightage", "frequent",
+    "time management", "mock", "practice", "generate",
+  ];
+
+  const SIMPLE_PATTERNS = [
+    /^(hi|hello|hey|thanks|thank you|ok|okay|yes|no|bye|good morning|good night)/,
+    /^what is your name/,
+    /^who are you/,
+    /^(haan|nahi|theek|shukriya|dhanyavad|namaste)/,
+  ];
+
+  // ── Rule 1: trivial / greeting → FREE tier ──
+  if (wordCount <= 5 && SIMPLE_PATTERNS.some((p) => p.test(q))) {
+    return {
+      selected_model: "openrouter:qwen/qwen3-8b:free",
+      reasoning: "Trivial greeting/acknowledgement — routed to free tier to save cost.",
+      recommended_max_tokens: 300,
+      temperature: 0.5,
+    };
+  }
+
+  // ── Rule 2: heavy reasoning / math / code → HIGH tier ──
+  const highHits = HIGH_KEYWORDS.filter((kw) => q.includes(kw)).length;
+  if (highHits >= 2 || (highHits >= 1 && wordCount >= 15)) {
+    return {
+      selected_model: "gemini:gemini-2.5-pro",
+      reasoning: `Complex reasoning detected (${highHits} high-complexity keyword${highHits > 1 ? "s" : ""}) — routed to Gemini 2.5 Pro.`,
+      recommended_max_tokens: 1500,
+      temperature: 0.3,
+    };
+  }
+
+  // ── Rule 3: long document context → MID tier (Flash has massive context) ──
+  if (paperTextLength > 12000) {
+    return {
+      selected_model: "gemini:gemini-2.5-flash",
+      reasoning: "Large document context — Gemini Flash selected for context-window efficiency.",
+      recommended_max_tokens: 1200,
+      temperature: 0.35,
+    };
+  }
+
+  // ── Rule 4: mid-complexity (summarise, explain, list, etc.) → MID tier ──
+  const midHits = MID_KEYWORDS.filter((kw) => q.includes(kw)).length;
+  if (midHits >= 1 || wordCount >= 12 || historyDepth >= 4) {
+    return {
+      selected_model: "gemini:gemini-2.5-flash",
+      reasoning: "General analysis/summary task — Gemini Flash chosen for speed and cost balance.",
+      recommended_max_tokens: 900,
+      temperature: 0.4,
+    };
+  }
+
+  // ── Rule 5: default short queries → FREE tier ──
+  return {
+    selected_model: "openrouter:qwen/qwen3-8b:free",
+    reasoning: "Short, routine query — routed to free tier for maximum cost efficiency.",
+    recommended_max_tokens: 600,
+    temperature: 0.4,
+  };
+}
+
+async function callAIWithFailover(messages, preferredProvider, openRouterModel, routerOverrides = {}) {
   const apis = [];
   
   const allApis = {
@@ -107,8 +201,8 @@ async function callAIWithFailover(messages, preferredProvider, openRouterModel) 
 
       const payload = {
         model: apiConfig.model,
-        temperature: 0.4,
-        max_tokens: 700,
+        temperature: routerOverrides.temperature ?? 0.4,
+        max_tokens: routerOverrides.max_tokens ?? 700,
         messages,
       };
 
@@ -370,6 +464,10 @@ async function createSubject(req, res) {
   const semester = await Semester.findById(req.body.semester);
   if (!semester) return res.status(404).json({ message: "Semester not found" });
 
+  if (!canManageCourse(req.user, semester.institute, semester.course)) {
+    return res.status(403).json({ message: "You are not authorized to add subjects for this course" });
+  }
+
   const year = Number(req.body.year);
   if (!Number.isInteger(year) || year < 1990 || year > 2100) {
     return res.status(400).json({ message: "A valid subject year is required" });
@@ -465,7 +563,7 @@ async function listPyqs(req, res) {
   if (req.user.role === "user") {
     if (req.user.institute) filter.institute = req.user.institute;
     if (req.user.course) filter.course = req.user.course;
-    if (req.user.semester) filter.semester = req.user.semester;
+    // Allow users to search across all semesters in their course
   }
 
   if (req.user.role === "admin") {
@@ -750,15 +848,29 @@ async function askAiOnPyq(req, res) {
     console.log(`PYQ text source: ${textSource}, chars: ${paperText.length}`);
 
     let result;
+    let routerDecision = null;
     try {
       let preferredProvider = req.body.selectedModel || null;
       let openRouterModel = null;
+      let routerOverrides = {};
+
+      // ── Smart Router: auto-select the best model ──
+      if (!preferredProvider || preferredProvider === "auto") {
+        routerDecision = routeQuery(question, conversationHistory, paperText.length);
+        preferredProvider = routerDecision.selected_model;
+        routerOverrides = {
+          temperature: routerDecision.temperature,
+          max_tokens: routerDecision.recommended_max_tokens,
+        };
+        console.log(`🧠 Smart Router → ${routerDecision.selected_model} | ${routerDecision.reasoning}`);
+      }
+
       if (preferredProvider && preferredProvider.includes(":")) {
         const idx = preferredProvider.indexOf(":");
         openRouterModel = preferredProvider.slice(idx + 1);
         preferredProvider = preferredProvider.slice(0, idx);
       }
-      result = await callAIWithFailover(messages, preferredProvider, openRouterModel);
+      result = await callAIWithFailover(messages, preferredProvider, openRouterModel, routerOverrides);
     } catch (apiError) {
       console.error("❌ All AI API providers failed:", apiError.message);
       return res.status(502).json({ message: "All AI providers failed: " + apiError.message });
@@ -862,7 +974,8 @@ async function askAiOnPyq(req, res) {
       quotaNote,
       throttleNotice,
       tokensUsedToday: postUsed,
-      tokensLimit: postLimit
+      tokensLimit: postLimit,
+      routerDecision: routerDecision || undefined,
     });
   } catch (error) {
     console.error("❌ Unexpected error in askAiOnPyq:", error.message);

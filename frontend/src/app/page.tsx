@@ -22,6 +22,7 @@ import {
   Activity,
   Database,
   Cloud,
+  CloudUpload,
 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -97,6 +98,7 @@ const nav = [
   { id: "semesters", label: "Semesters", icon: Layers3, superOnly: true },
   { id: "subjects", label: "Subjects", icon: BookOpen, superOnly: true },
   { id: "pyqs", label: "PYQs", icon: FileUp },
+  { id: "uploads", label: "Upload PYQs", icon: CloudUpload, adminOrSuper: true },
   { id: "ai-assistant", label: "AI Assistant", icon: Sparkles, href: "/ai-assistant" },
   { id: "users", label: "Users", icon: Users, superOnly: true },
   { id: "api-usage", label: "API Usage", icon: Activity, superOnly: true },
@@ -161,6 +163,7 @@ export default function Home() {
   }, []);
 
   const isSuper = user?.role === "super_admin";
+  const isAdmin = user?.role === "admin";
 
   const notify = (next: Toast) => {
     setToast(next);
@@ -177,12 +180,13 @@ export default function Home() {
     setLoadingData(true);
     try {
       const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value)).toString();
+      const pyqQuery = new URLSearchParams(Object.entries({ institute: filters.institute, course: filters.course }).filter(([, value]) => value)).toString();
       const [instituteData, courseData, semesterData, subjectData, pyqData] = await Promise.all([
         authed<{ institutes: Institute[] }>("/institutes"),
         authed<{ courses: Course[] }>("/courses"),
         authed<{ semesters: Semester[] }>("/semesters"),
         authed<{ subjects: Subject[] }>("/subjects"),
-        authed<{ pyqs: Pyq[] }>(`/pyqs${query ? `?${query}` : ""}`),
+        authed<{ pyqs: Pyq[] }>(`/pyqs${pyqQuery ? `?${pyqQuery}` : ""}`),
       ]);
       setInstitutes(instituteData.institutes);
       setCourses(courseData.courses);
@@ -295,6 +299,10 @@ export default function Home() {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
       if (tab) {
+        if (tab === "ai-assistant") {
+          window.location.replace("/ai-assistant");
+          return;
+        }
         setActive(tab);
       }
     }
@@ -382,7 +390,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return <AuthScreen setToken={setToken} notify={notify} toast={toast} />;
+    return <AuthScreen setToken={setToken} applyUser={applyUser} notify={notify} toast={toast} />;
   }
 
   const isMandatoryOnboarding = user.role === "user" && (!user.institute || !user.course || !user.semester);
@@ -404,7 +412,11 @@ export default function Home() {
     );
   }
 
-  const visibleNav = nav.filter((item) => !item.superOnly || isSuper);
+  const visibleNav = nav.filter((item) => {
+    if (item.superOnly) return isSuper;
+    if (item.adminOrSuper) return isSuper || isAdmin;
+    return true;
+  });
 
   return (
     <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
@@ -721,6 +733,20 @@ export default function Home() {
               loading={loading}
             />
           )}
+          {active === "uploads" && (isSuper || isAdmin) && (
+            <UploadsPanel
+              institutes={displayedInstitutes}
+              courses={displayedCourses}
+              semesters={displayedSemesters}
+              subjects={displayedSubjects}
+              submit={submitMultipart("/pyqs", loadAll, notify, setLoading)}
+              loading={loading}
+              canManage={user.role === "super_admin" || user.role === "admin"}
+              user={user}
+              refreshData={loadAll}
+              notify={notify}
+            />
+          )}
           {active === "pyqs" && (
             <PyqsPanel
               pyqs={pyqs}
@@ -833,7 +859,17 @@ export default function Home() {
   }
 }
 
-function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => void; notify: (toast: Toast) => void; toast: Toast }) {
+function AuthScreen({
+  setToken,
+  applyUser,
+  notify,
+  toast,
+}: {
+  setToken: (token: string) => void;
+  applyUser: (user: User) => void;
+  notify: (toast: Toast) => void;
+  toast: Toast;
+}) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
@@ -855,9 +891,10 @@ function AuthScreen({ setToken, notify, toast }: { setToken: (token: string) => 
     setBusy(true);
     const body = Object.fromEntries(new FormData(event.currentTarget).entries());
     try {
-      const data = await api<{ token: string }>(`/auth/${mode}`, { method: "POST", body });
+      const data = await api<{ token: string; user: User }>(`/auth/${mode}`, { method: "POST", body });
       localStorage.setItem("pyq_token", data.token);
       setToken(data.token);
+      applyUser(data.user);
     } catch (error) {
       notify({ type: "error", text: (error as Error).message });
     } finally {
@@ -1465,7 +1502,7 @@ function Overview({
           </div>
 
           {/* User AI Token Usage Analytics Card */}
-          {userTokenStatus && (
+          {userTokenStatus && user.role === "admin" && (
             <div className="rounded-lg border border-[var(--line)] bg-white p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
               <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -1961,29 +1998,30 @@ function SubjectsPanel({
   );
 }
 
-function PyqsPanel(props: {
-  pyqs: Pyq[];
+function UploadsPanel(props: {
   institutes: Institute[];
   courses: Course[];
   semesters: Semester[];
   subjects: Subject[];
-  filters: PyqFilters;
-  setFilters: (filters: PyqFilters) => void;
   submit: (event: FormEvent<HTMLFormElement>) => void;
-  remove: (path: string) => void;
   loading: boolean;
   canManage: boolean;
-  isStudent?: boolean;
-  onView?: (id: string) => void;
   user: User;
+  refreshData: () => Promise<void>;
+  notify: (toast: Toast) => void;
 }) {
-  const { pyqs, institutes, courses, semesters, subjects, filters, setFilters, submit, remove, loading, canManage, isStudent, onView, user } = props;
+  const { institutes, courses, semesters, subjects, submit, loading, canManage, user, refreshData, notify } = props;
   const [uploadInstitute, setUploadInstitute] = useState("");
   const [uploadCourse, setUploadCourse] = useState("");
   const [uploadSemester, setUploadSemester] = useState("");
   const [uploadSubjectYear, setUploadSubjectYear] = useState("");
-  const [showUpload, setShowUpload] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [subjectId, setSubjectId] = useState("");
+
+  const [creatingSubject, setCreatingSubject] = useState(false);
+  const [newSubName, setNewSubName] = useState("");
+  const [newSubCode, setNewSubCode] = useState("");
+  const [newSubYear, setNewSubYear] = useState("");
+  const [isCreatingSub, setIsCreatingSub] = useState(false);
 
   const allowedInstitutes = useMemo(() => {
     if (user.role !== "admin" || !user.adminScopes) return institutes;
@@ -2001,14 +2039,178 @@ function PyqsPanel(props: {
   }, [user, courses, uploadInstitute]);
 
   const uploadSemesters = semesters.filter((s) => getIdStr(s.course) === uploadCourse);
+  
   const uploadSubjects = subjects.filter(
     (s) => getIdStr(s.course) === uploadCourse && getIdStr(s.semester) === uploadSemester &&
       (!uploadSubjectYear || String(s.year || "") === uploadSubjectYear)
   );
+  
   const uploadSubjectYears = Array.from(new Set(
     subjects.filter((s) => getIdStr(s.course) === uploadCourse && getIdStr(s.semester) === uploadSemester && s.year)
       .map((s) => String(s.year))
   )).sort((a, b) => Number(b) - Number(a));
+
+  useEffect(() => {
+    if (allowedInstitutes.length === 1 && !uploadInstitute) {
+      setUploadInstitute(allowedInstitutes[0]._id);
+    }
+  }, [allowedInstitutes, uploadInstitute]);
+
+  useEffect(() => {
+    if (allowedCourses.length === 1 && !uploadCourse && uploadInstitute) {
+      setUploadCourse(allowedCourses[0]._id);
+    }
+  }, [allowedCourses, uploadCourse, uploadInstitute]);
+
+  const handleCreateSubject = async () => {
+    if (!newSubName || !newSubYear) {
+      notify({ type: "error", text: "Subject name and year are required" });
+      return;
+    }
+    setIsCreatingSub(true);
+    try {
+      const token = localStorage.getItem("pyq_token");
+      const res = await fetch("/api/subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          semester: uploadSemester,
+          year: newSubYear,
+          name: newSubName,
+          code: newSubCode
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create subject");
+      
+      notify({ type: "success", text: "Subject created successfully!" });
+      setCreatingSubject(false);
+      setNewSubName("");
+      setNewSubCode("");
+      await refreshData();
+      
+      setUploadSubjectYear(String(newSubYear));
+      
+      // Auto-select the newly created subject if we can find it in the response
+      if (data.subject && data.subject._id) {
+        setSubjectId(data.subject._id);
+      }
+    } catch (error: any) {
+      notify({ type: "error", text: error.message });
+    } finally {
+      setIsCreatingSub(false);
+    }
+  };
+
+  if (!canManage) {
+    return <div className="p-4 text-center text-gray-500">You do not have permission to upload PYQs.</div>;
+  }
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <CloudUpload size={20} className="text-[var(--brand)]" />
+            Upload PYQs
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">Upload question papers and optionally create new subjects inline.</p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm space-y-4">
+        <form onSubmit={(e) => { submit(e); setSubjectId(""); }} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Select name="uploadInstitute" label="Institute" value={uploadInstitute}
+            onChange={(v) => { setUploadInstitute(v); setUploadCourse(""); setUploadSemester(""); setUploadSubjectYear(""); setSubjectId(""); }}
+            options={allowedInstitutes.map((i) => [i._id, i.shortForm || i.name])} required />
+          <Select name="uploadCourse" label="Course" value={uploadCourse}
+            onChange={(v) => { setUploadCourse(v); setUploadSemester(""); setUploadSubjectYear(""); setSubjectId(""); }}
+            options={allowedCourses.map((c) => [c._id, c.name])} required disabled={!uploadInstitute} />
+          <Select name="uploadSemester" label="Semester" value={uploadSemester}
+            onChange={(v) => { setUploadSemester(v); setUploadSubjectYear(""); setSubjectId(""); }}
+            options={uploadSemesters.map((s) => [s._id, s.name])} required disabled={!uploadCourse} />
+          
+          <div className="sm:col-span-2 xl:col-span-4 bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-semibold text-gray-700">Subject Selection</h4>
+              {!creatingSubject && uploadSemester && (
+                <button 
+                  type="button" 
+                  onClick={() => setCreatingSubject(true)} 
+                  className="text-xs font-bold bg-[var(--brand)] text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-[var(--brand-dark)] active:scale-95 transition-all flex items-center gap-1.5"
+                >
+                  + Create New Subject
+                </button>
+              )}
+            </div>
+            
+            {creatingSubject ? (
+              <div className="bg-white p-4 rounded-lg border border-gray-200 grid gap-3 sm:grid-cols-3 relative shadow-sm">
+                <button type="button" onClick={() => setCreatingSubject(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                  <X size={16} />
+                </button>
+                <div className="sm:col-span-3 pb-2 border-b border-gray-100">
+                  <span className="text-xs font-bold text-gray-800">Add New Subject</span>
+                </div>
+                <Input name="_subName" label="Subject Name" value={newSubName} onChange={setNewSubName} placeholder="e.g. Mathematics I" />
+                <Input name="_subCode" label="Subject Code (Optional)" value={newSubCode} onChange={setNewSubCode} placeholder="e.g. MAT101" />
+                <Input name="_subYear" label="Syllabus Year" value={newSubYear} onChange={setNewSubYear} type="number" placeholder="e.g. 2023" />
+                <div className="sm:col-span-3 flex justify-end mt-2">
+                  <button type="button" onClick={handleCreateSubject} disabled={isCreatingSub} className="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50">
+                    {isCreatingSub ? "Saving..." : "Save Subject"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Select name="uploadSubjectYear" label="Subject Year" value={uploadSubjectYear}
+                  onChange={(v) => { setUploadSubjectYear(v); setSubjectId(""); }} 
+                  options={uploadSubjectYears.map((y) => [y, y])} required disabled={!uploadSemester} />
+                <Select name="subject" label="Subject" value={subjectId} onChange={setSubjectId}
+                  options={uploadSubjects.map((s) => [s._id, `${s.name}${s.code ? " · " + s.code : ""}`])} required disabled={!uploadSubjectYear} />
+              </div>
+            )}
+          </div>
+
+          <Input name="year" label="PYQ Year" type="number" required />
+          <Select name="examType" label="Exam Type"
+            options={[
+              ["Mid Semester Exam", "Mid Semester Exam"], ["End Semester Exam", "End Semester Exam"],
+              ["Sessional Exam", "Sessional Exam"], ["Unit Test", "Unit Test"],
+              ["Internal Exam", "Internal Exam"], ["External Exam", "External Exam"],
+              ["Practical Exam", "Practical Exam"], ["Lab Exam", "Lab Exam"],
+            ]} required defaultValue="End Semester Exam" />
+          <div className="sm:col-span-2">
+            <Input name="pdf" label="PDF File" type="file" accept="application/pdf" required />
+          </div>
+          
+          <div className="sm:col-span-2 xl:col-span-4 flex justify-end pt-2">
+            <Submit loading={loading} label="Upload PYQ" />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function PyqsPanel(props: {
+  pyqs: Pyq[];
+  institutes: Institute[];
+  courses: Course[];
+  semesters: Semester[];
+  subjects: Subject[];
+  filters: PyqFilters;
+  setFilters: (filters: PyqFilters) => void;
+  submit: (event: FormEvent<HTMLFormElement>) => void;
+  remove: (path: string) => void;
+  loading: boolean;
+  canManage: boolean;
+  isStudent?: boolean;
+  onView?: (id: string) => void;
+  user: User;
+}) {
+  const { pyqs, institutes, courses, semesters, subjects, filters, setFilters, submit, remove, loading, canManage, isStudent, onView, user } = props;
+  const [searchText, setSearchText] = useState("");
 
   const filterCourses = courses.filter((c) => !filters.institute || getIdStr(c.institute) === filters.institute);
   const filterSemesters = semesters.filter((s) => !filters.course || getIdStr(s.course) === filters.course);
@@ -2033,14 +2235,19 @@ function PyqsPanel(props: {
   const filteredPyqs = pyqs.filter((p) => {
     const matchInst = !filters.institute || getIdStr(p.institute) === filters.institute;
     const matchCourse = !filters.course || getIdStr(p.course) === filters.course;
-    const matchSem = !filters.semester || getIdStr(p.semester) === filters.semester;
-    const matchSubject = !filters.subject || getIdStr(p.subject) === filters.subject;
-    const matchYear = !filters.year || String(p.year) === filters.year;
-    const matchSearch = !searchText ||
+    
+    const isSearching = searchText.trim().length > 0;
+    
+    const matchSem = isSearching ? true : (!filters.semester || getIdStr(p.semester) === filters.semester);
+    const matchSubject = isSearching ? true : (!filters.subject || getIdStr(p.subject) === filters.subject);
+    const matchYear = isSearching ? true : (!filters.year || String(p.year) === filters.year);
+    
+    const matchSearch = !isSearching ||
       p.subject?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       p.title?.toLowerCase().includes(searchText.toLowerCase()) ||
       String(p.year).includes(searchText) ||
       p.examType?.toLowerCase().includes(searchText.toLowerCase());
+      
     return matchInst && matchCourse && matchSem && matchSubject && matchYear && matchSearch;
   });
 
@@ -2075,54 +2282,7 @@ function PyqsPanel(props: {
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">{filteredPyqs.length} paper{filteredPyqs.length !== 1 ? "s" : ""} found</p>
         </div>
-        {canManage && (
-          <button
-            onClick={() => setShowUpload((v) => !v)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition active:scale-95 cursor-pointer shadow-sm"
-            style={{ background: "linear-gradient(135deg,var(--brand),var(--brand-dark))" }}
-          >
-            <FileUp size={15} />
-            {showUpload ? "Hide Upload" : "Upload PYQ"}
-          </button>
-        )}
       </div>
-
-      {/* ── Upload Form ── */}
-      {canManage && showUpload && (
-        <div className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <FileUp size={15} className="text-[var(--brand)]" /> Upload New PYQ
-          </h3>
-          <form onSubmit={(e) => { submit(e); setShowUpload(false); }} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Select name="uploadInstitute" label="Institute" value={uploadInstitute}
-              onChange={(v) => { setUploadInstitute(v); setUploadCourse(""); setUploadSemester(""); setUploadSubjectYear(""); }}
-              options={allowedInstitutes.map((i) => [i._id, i.shortForm || i.name])} required />
-            <Select name="uploadCourse" label="Course" value={uploadCourse}
-              onChange={(v) => { setUploadCourse(v); setUploadSemester(""); setUploadSubjectYear(""); }}
-              options={allowedCourses.map((c) => [c._id, c.name])} required disabled={!uploadInstitute} />
-            <Select name="uploadSemester" label="Semester" value={uploadSemester}
-              onChange={(v) => { setUploadSemester(v); setUploadSubjectYear(""); }}
-              options={uploadSemesters.map((s) => [s._id, s.name])} required disabled={!uploadCourse} />
-            <Select name="uploadSubjectYear" label="Subject Year" value={uploadSubjectYear}
-              onChange={setUploadSubjectYear} options={uploadSubjectYears.map((y) => [y, y])} required disabled={!uploadSemester} />
-            <Select name="subject" label="Subject"
-              options={uploadSubjects.map((s) => [s._id, `${s.name}${s.code ? ` · ${s.code}` : ""}`])} required disabled={!uploadSubjectYear} />
-            <Input name="year" label="PYQ Year" type="number" required />
-            <Select name="examType" label="Exam Type"
-              options={[
-                ["Mid Semester Exam", "Mid Semester Exam"], ["End Semester Exam", "End Semester Exam"],
-                ["Sessional Exam", "Sessional Exam"], ["Unit Test", "Unit Test"],
-                ["Internal Exam", "Internal Exam"], ["External Exam", "External Exam"],
-                ["Practical Exam", "Practical Exam"], ["Lab Exam", "Lab Exam"],
-              ]} required defaultValue="End Semester Exam" />
-            <Input name="pdf" label="PDF File" type="file" accept="application/pdf" required />
-            <div className="sm:col-span-2 xl:col-span-4 flex justify-end">
-              <Submit loading={loading} label="Upload PYQ" />
-            </div>
-          </form>
-        </div>
-      )}
-
       {/* ── Search + Filters ── */}
       <div className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm space-y-3">
         {/* Search bar */}
