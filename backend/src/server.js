@@ -50,11 +50,16 @@ if (isVercel) {
   });
 }
 
+const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+
 const uploadsDir = isVercel
   ? path.join("/tmp", "uploads")
   : path.join(__dirname, "..", "uploads");
 
-app.use("/uploads", express.static(uploadsDir));
+// Only serve static uploads when not using Cloudinary (local dev)
+if (!useCloudinary) {
+  app.use("/uploads", express.static(uploadsDir));
+}
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/auth", authRoutes);

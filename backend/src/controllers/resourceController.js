@@ -15,6 +15,11 @@ const {
   deleteSemesterTree,
   deleteSubjectTree,
 } = require("../utils/cascade");
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  useCloudinary,
+} = require("../middleware/upload");
 
 const isVercel = process.env.VERCEL || process.env.NOW_REGION || process.env.LAMBDA_TASK_ROOT || process.env.NODE_ENV === "production";
 
@@ -250,13 +255,14 @@ const hasUsefulPaperText = (value = "") => {
   return normalized.length >= MIN_USEFUL_PDF_TEXT_CHARS && words.length >= 25;
 };
 
-async function extractTextWithOcr(pdfPath) {
+async function extractTextWithOcr(pdfInput) {
+  // pdfInput can be a file path (string) or a Buffer
   const [{ pdf }, { createWorker }] = await Promise.all([
     import("pdf-to-img"),
     import("tesseract.js"),
   ]);
 
-  const document = await pdf(pdfPath, { scale: OCR_SCALE });
+  const document = await pdf(pdfInput, { scale: OCR_SCALE });
   const worker = await createWorker("eng", undefined, {
     langPath: path.join(__dirname, "..", ".."),
     cachePath: path.join(__dirname, "..", ".."),
@@ -293,7 +299,8 @@ async function extractPaperText({ pdfBuffer, pdfPath, stat }) {
 
   if (!hasUsefulPaperText(extractedText)) {
     source = "ocr";
-    extractedText = await extractTextWithOcr(pdfPath);
+    // Always pass buffer so it works for both local files and cloud URLs
+    extractedText = await extractTextWithOcr(pdfBuffer);
   }
 
   const result = {
@@ -345,7 +352,16 @@ const normalizeLogoUrl = (value) => {
   throw error;
 };
 
-const logoUrlFromRequest = (req) => fileUrl(req) || normalizeLogoUrl(req.body.logoUrl);
+const logoUrlFromRequest = async (req) => {
+  if (req.file) {
+    if (useCloudinary && req.file.buffer) {
+      const result = await uploadToCloudinary(req.file.buffer, "logos", "image");
+      return result.url;
+    }
+    return fileUrl(req);
+  }
+  return normalizeLogoUrl(req.body.logoUrl);
+};
 
 async function listInstitutes(_req, res) {
   const institutes = await Institute.find().sort("name");
@@ -356,7 +372,7 @@ async function createInstitute(req, res) {
   const institute = await Institute.create({
     name: req.body.name,
     shortForm: req.body.shortForm,
-    logoUrl: logoUrlFromRequest(req),
+    logoUrl: await logoUrlFromRequest(req),
   });
   res.status(201).json({ institute });
 }
@@ -366,7 +382,7 @@ async function updateInstitute(req, res) {
     name: req.body.name,
     shortForm: req.body.shortForm,
   };
-  const nextLogoUrl = logoUrlFromRequest(req);
+  const nextLogoUrl = await logoUrlFromRequest(req);
   if (nextLogoUrl) patch.logoUrl = nextLogoUrl;
 
   const institute = await Institute.findByIdAndUpdate(req.params.id, patch, {
@@ -595,11 +611,19 @@ async function createPyq(req, res) {
   }
   if (!req.file) return res.status(400).json({ message: "PDF file is required" });
 
+  let uploadedFileUrl;
+  if (useCloudinary && req.file.buffer) {
+    const result = await uploadToCloudinary(req.file.buffer, "pyqs", "raw");
+    uploadedFileUrl = result.url;
+  } else {
+    uploadedFileUrl = fileUrl(req);
+  }
+
   const pyq = await PYQ.create({
     title: subject.code || subject.name,
     year: req.body.year,
     examType: req.body.examType || "End Semester",
-    fileUrl: fileUrl(req),
+    fileUrl: uploadedFileUrl,
     originalName: req.file.originalname,
     uploadedBy: req.user._id,
     institute: subject.institute,
@@ -616,6 +640,20 @@ async function deletePyq(req, res) {
   if (!canManageCourse(req.user, pyq.institute, pyq.course)) {
     return res.status(403).json({ message: "Course scope not assigned" });
   }
+
+  // Delete file from Cloudinary if it's a cloud URL
+  if (useCloudinary && pyq.fileUrl && pyq.fileUrl.startsWith("http")) {
+    try {
+      const urlParts = pyq.fileUrl.split("/upload/");
+      if (urlParts.length >= 2) {
+        const publicId = urlParts[1].replace(/^v\d+\//, "");
+        await deleteFromCloudinary(publicId, "raw");
+      }
+    } catch (err) {
+      console.warn("Failed to delete file from Cloudinary:", err.message);
+    }
+  }
+
   await pyq.deleteOne();
   res.json({ message: "PYQ deleted" });
 }
@@ -765,25 +803,45 @@ async function askAiOnPyq(req, res) {
       }
     }
 
-    const pdfPath = resolveUploadPath(pyq.fileUrl);
-    if (!pdfPath) return res.status(400).json({ message: "PYQ file path is invalid" });
-
     let pdfBuffer;
+    let pdfIdentifier;
     let stat;
-    try {
-      stat = await fs.stat(pdfPath);
-      if (stat.size > MAX_PDF_BYTES) {
-        return res.status(413).json({ message: "PDF is too large for AI analysis" });
+
+    if (pyq.fileUrl && pyq.fileUrl.startsWith("http")) {
+      // Fetch PDF from Cloudinary / remote URL
+      try {
+        const response = await fetch(pyq.fileUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+        pdfBuffer = Buffer.from(arrayBuffer);
+        if (pdfBuffer.length > MAX_PDF_BYTES) {
+          return res.status(413).json({ message: "PDF is too large for AI analysis" });
+        }
+        stat = { size: pdfBuffer.length, mtimeMs: pyq.updatedAt?.getTime() || 0 };
+        pdfIdentifier = pyq.fileUrl;
+      } catch (_error) {
+        return res.status(404).json({ message: "PYQ file not found on cloud storage" });
       }
-      pdfBuffer = await fs.readFile(pdfPath);
-    } catch (_error) {
-      return res.status(404).json({ message: "PYQ file not found" });
+    } else {
+      // Read from local filesystem
+      const pdfPath = resolveUploadPath(pyq.fileUrl);
+      if (!pdfPath) return res.status(400).json({ message: "PYQ file path is invalid" });
+      try {
+        stat = await fs.stat(pdfPath);
+        if (stat.size > MAX_PDF_BYTES) {
+          return res.status(413).json({ message: "PDF is too large for AI analysis" });
+        }
+        pdfBuffer = await fs.readFile(pdfPath);
+        pdfIdentifier = pdfPath;
+      } catch (_error) {
+        return res.status(404).json({ message: "PYQ file not found" });
+      }
     }
 
     let paperText = "";
     let textSource = "";
     try {
-      const extracted = await extractPaperText({ pdfBuffer, pdfPath, stat });
+      const extracted = await extractPaperText({ pdfBuffer, pdfPath: pdfIdentifier, stat });
       paperText = extracted.text;
       textSource = extracted.source;
     } catch (error) {
